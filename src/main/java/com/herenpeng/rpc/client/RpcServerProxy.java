@@ -31,7 +31,7 @@ public class RpcServerProxy {
     // RPC 请求 Id
     private final AtomicLong rpcReqId = new AtomicLong();
 
-    protected Channel session;
+    private Channel session;
     private final RpcServerProxy instance;
     private final String name;
     private final String host;
@@ -45,9 +45,9 @@ public class RpcServerProxy {
         return async ? asyncRpcServer : syncRpcServer;
     }
 
-    protected static final Map<Long, RpcRsp> rpcRspEvents = new ConcurrentHashMap<>();
+    private static final Map<Long, RpcRsp> rpcRspEvents = new ConcurrentHashMap<>();
     // 异步请求Id
-    protected static final Map<Long, RpcCallback> rpcAsyncCallbackEvents = new ConcurrentHashMap<>();
+    private static final Map<Long, RpcCallback> rpcAsyncCallbackEvents = new ConcurrentHashMap<>();
 
     public void setRpcRsp(RpcRsp rpcRsp) {
         if (rpcAsyncCallbackEvents.containsKey(rpcRsp.getId())) {
