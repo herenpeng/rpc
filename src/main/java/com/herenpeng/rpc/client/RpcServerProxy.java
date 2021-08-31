@@ -272,6 +272,39 @@ public class RpcServerProxy {
             }
         }
     }
+    
+    
+    private static class RpcServerAsyncProxy implements InvocationHandler {
+
+        private final RpcServerProxy rpcServerProxy;
+
+        public RpcServerAsyncProxy(RpcServerProxy rpcServerProxy) {
+            this.rpcServerProxy = rpcServerProxy;
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) {
+            // 异步执行
+            return rpcServerProxy.invoke(method, args, true);
+        }
+
+    }
+
+    private static class RpcServerSyncProxy implements InvocationHandler {
+
+        private final RpcServerProxy rpcServerProxy;
+
+        public RpcServerSyncProxy(RpcServerProxy rpcServerProxy) {
+            this.rpcServerProxy = rpcServerProxy;
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) {
+            // 同步执行
+            return rpcServerProxy.invoke(method, args, false);
+        }
+
+    }
 
 
 }
