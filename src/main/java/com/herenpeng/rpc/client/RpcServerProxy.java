@@ -50,9 +50,12 @@ public class RpcServerProxy {
     protected static final Map<Long, RpcCallback> rpcAsyncCallbackEvents = new ConcurrentHashMap<>();
 
     public void setRpcRsp(RpcRsp rpcRsp) {
-        rpcRspEvents.put(rpcRsp.getId(), rpcRsp);
-        // 检查回调函数
-        checkCallback(rpcRsp);
+        if (rpcAsyncCallbackEvents.containsKey(rpcRsp.getId())) {
+            // 异步事件，检查回调函数
+            checkCallback(rpcRsp);
+        } else {
+            rpcRspEvents.put(rpcRsp.getId(), rpcRsp);
+        }
     }
 
     public RpcServerProxy(String name, String host, int port, RpcClientConfig rpcConfig) {
@@ -154,7 +157,7 @@ public class RpcServerProxy {
             if ((currentTime - startTime) > rpcConfig.getSyncTimeout()) {
                 return null;
             }
-            if ((rpcRsp = rpcRspEvents.get(rpcReq.getId())) != null) {
+            if ((rpcRsp = rpcRspEvents.remove(rpcReq.getId())) != null) {
                 if (StringUtils.isNotEmpty(rpcRsp.getException())) {
                     throw new RpcException("[RPC客户端]RPC服务端响应异常信息：" + rpcRsp.getException());
                 }
