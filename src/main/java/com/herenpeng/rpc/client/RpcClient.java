@@ -41,8 +41,8 @@ public class RpcClient {
         return createRpc(name, targetClass, false);
     }
 
-    // RPC服务端名称，RPC目标类名称，代理类
-    private static final Map<String, Map<String, Object>> rpcMap = new ConcurrentHashMap<>();
+    // RPC服务端名称，RPC目标类名称，同步或异步，代理类
+    private static final Map<String, Map<String, Map<Boolean, Object>>> rpcMap = new ConcurrentHashMap<>();
 
     // 是否异步 async
     private <T> T createRpc(String name, Class<?> targetClass, boolean async) {
@@ -50,11 +50,12 @@ public class RpcClient {
         if (rpcServerProxy == null) {
             throw new RpcException("[RPC客户端]服务" + name + "未注册，请先注册该服务");
         }
-        Map<String, Object> map = rpcMap.computeIfAbsent(name, key -> new ConcurrentHashMap<>());
-        Object rpc = map.get(targetClass.getName());
+        Map<String, Map<Boolean, Object>> map = rpcMap.computeIfAbsent(name, key -> new ConcurrentHashMap<>());
+        Map<Boolean, Object> rpcProxyMap = map.computeIfAbsent(targetClass.getName(), k -> new ConcurrentHashMap<>());
+        Object rpc = rpcProxyMap.get(async);
         if (rpc == null) {
             rpc = Proxy.newProxyInstance(targetClass.getClassLoader(), new Class[]{targetClass}, rpcServerProxy.get(async));
-            map.put(targetClass.getName(), rpc);
+            rpcProxyMap.put(async, rpc);
         }
         return (T) rpc;
     }
