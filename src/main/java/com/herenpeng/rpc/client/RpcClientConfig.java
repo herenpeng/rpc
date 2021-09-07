@@ -1,5 +1,6 @@
 package com.herenpeng.rpc.client;
 
+import com.herenpeng.rpc.RpcConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,9 +10,7 @@ import java.util.Properties;
 /**
  * @author herenpeng
  */
-public class RpcClientConfig {
-
-    private static final Logger logger = LoggerFactory.getLogger(RpcClientConfig.class);
+public class RpcClientConfig extends RpcConfig {
 
     // 同步调用超时时长，默认 3 秒
     private long syncTimeout;
@@ -25,26 +24,11 @@ public class RpcClientConfig {
     // 心跳失效触发次数，默认 3 次
     private int heartbeatInvalidTimes;
 
-    // RPC 配置文件名称
-    private static final String rpcConfigName = "rpc.properties";
-    private static final String rpcConfigClientPrefix = "rpc.client.";
-    private static final Properties properties = new Properties();
-
-    // 配置文件优先级：代码配置 > rpc.properties > 默认配置
     public RpcClientConfig() {
-        try {
-            InputStream inputStream = RpcClientConfig.class.getClassLoader().getResourceAsStream(rpcConfigName);
-            if (inputStream != null) {
-                properties.load(inputStream);
-            }
-            this.syncTimeout = Long.parseLong(properties.getProperty(rpcConfigClientPrefix + "connection.sync-timeout", "3000"));
-            this.reconnectionTime = Long.parseLong(properties.getProperty(rpcConfigClientPrefix + "connection.reconnection-time", "3000"));
-            this.heartbeatTime = Long.parseLong(properties.getProperty(rpcConfigClientPrefix + "heartbeat.time", "10000"));
-            this.heartbeatInvalidTimes = Integer.parseInt(properties.getProperty(rpcConfigClientPrefix + "heartbeat.invalid-times", "3"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error("[RPC客户端]配置解析失败");
-        }
+        this.syncTimeout = getLong(rpcClientConfigPrefix, "connection.sync-timeout", 3000L);
+        this.reconnectionTime = getLong(rpcClientConfigPrefix, "connection.reconnection-time", 3000L);
+        this.heartbeatTime = getLong(rpcClientConfigPrefix, "heartbeat.time", 10000L);
+        this.heartbeatInvalidTimes = getInt(rpcClientConfigPrefix, "heartbeat.invalid-times", 3);
     }
 
 
