@@ -15,7 +15,7 @@ public class RpcEncoder extends MessageToByteEncoder<Object> {
     @Override
     protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
         try {
-            // 编码，将 rpc信息 转化为字节
+            // 编码，将 RpcReq 对象或者 RpcRsp 对象转化为字节
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(bos);
             oos.writeObject(msg);
