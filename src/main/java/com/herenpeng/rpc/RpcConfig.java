@@ -44,7 +44,7 @@ public class RpcConfig {
         return value == null ? defaultValue : Integer.parseInt(value);
     }
 
-    protected boolean getInt(String prefix, String name, boolean defaultValue) {
+    protected boolean getBoolean(String prefix, String name, boolean defaultValue) {
         String value = properties.getProperty(prefix + name);
         return value == null ? defaultValue : Boolean.parseBoolean(value);
     }
