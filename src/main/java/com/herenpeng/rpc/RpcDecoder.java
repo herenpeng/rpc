@@ -15,7 +15,7 @@ public class RpcDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        // 解码，将字节转化为 RpcRsp
+        // 解码，将字节转化为 RpcReq 或者 RpcRsp 信息对象
         final byte[] bytes;
         final int length = in.readableBytes();
         bytes = new byte[length];
