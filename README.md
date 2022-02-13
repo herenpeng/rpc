@@ -14,8 +14,8 @@ RPC 框架的入门，首先要使用这个 RPC 框架，搭建一个简单的 R
 
 3、搭建两个简单的 Maven 工程，项目名称分别为：
 
-- rpc-server-demo
-- rpc-client-demo
+- rpc-server-example
+- rpc-client-example
 
 在两个项目中，分别引入 rpc 框架的依赖：
 
@@ -38,7 +38,7 @@ RPC 框架的入门，首先要使用这个 RPC 框架，搭建一个简单的 R
 
 ## 创建RPC服务端
 
-> 在 `rpc-server-demo` 项目下创建 `com.herenpeng.rpc` 文件包，并在该包下创建 `MockRpcServer` 和 `UserService` 类。
+> 在 `rpc-server-example` 项目下创建 `com.herenpeng.rpc` 文件包，并在该包下创建 `MockRpcServer` 和 `UserService` 类。
 
 ### 初始化服务端
 
@@ -76,7 +76,7 @@ public class UserService {
 
 ## 创建RPC客户端
 
-> 在 `rpc-client-demo` 项目下创建 `com.herenpeng.rpc` 文件包，并在该包下创建 `MockRpcClient` 类和 `UserService` 接口。
+> 在 `rpc-client-example` 项目下创建 `com.herenpeng.rpc` 文件包，并在该包下创建 `MockRpcClient` 类和 `UserService` 接口。
 
 ### 初始化客户端
 
@@ -119,7 +119,7 @@ public interface UserService {
 
 ## RPC调用
 
-> 先启动 `rpc-server-demo` 项目下的 `MockRpcServer` 类，然后启动 `rpc-client-demo` 项目下的 `MockRpcClient` 类。
+> 先启动 `rpc-server-example` 项目下的 `MockRpcServer` 类，然后启动 `rpc-client-example` 项目下的 `MockRpcClient` 类。
 
 ```java
 package com.herenpeng.rpc;
