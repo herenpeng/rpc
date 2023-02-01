@@ -76,10 +76,10 @@ public class RpcServer {
 
 
     public RpcRsp invoke(RpcReq rpcReq) {
-        if (rpcReq == null || rpcReq.getId() == 0) {
+        if (rpcReq == null) {
             throw new IllegalArgumentException("[RPC服务端]rpcReq不允许为null");
         }
-        RpcRsp rpcRsp = new RpcRsp(rpcReq);
+        RpcRsp rpcRsp = new RpcRsp();
         try {
             Object rpcServer = cache.getRpcServer(rpcReq.getClassName());
             Class<?> rpcServerClass = rpcServer.getClass();

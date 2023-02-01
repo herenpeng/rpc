@@ -15,17 +15,10 @@ public class RpcDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        // 解码，将字节转化为 RpcReq 或者 RpcRsp 信息对象
-        final byte[] bytes;
-        final int length = in.readableBytes();
-        bytes = new byte[length];
-        in.getBytes(in.readerIndex(), bytes, 0, length);
-
-        ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-        ObjectInputStream ois = new ObjectInputStream(bis);
-        Object object = ois.readObject();
-
-        out.add(object);
+        // 解码
+        RpcMsg msg = new RpcMsg();
+        msg.decode(in);
+        out.add(msg);
         in.skipBytes(in.readableBytes());
     }
 }

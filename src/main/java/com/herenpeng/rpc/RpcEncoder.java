@@ -6,25 +6,17 @@ import io.netty.handler.codec.MessageToByteEncoder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
+import java.nio.ByteBuffer;
 
 /**
  * @author herenpeng
  */
-public class RpcEncoder extends MessageToByteEncoder<Object> {
+public class RpcEncoder extends MessageToByteEncoder<RpcMsg> {
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
-        try {
-            // 编码，将 RpcReq 对象或者 RpcRsp 对象转化为字节
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(bos);
-            oos.writeObject(msg);
-            byte[] bytes = bos.toByteArray();
-            //将数组写入到ByteBuf中
-            out.writeBytes(bytes);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    protected void encode(ChannelHandlerContext ctx, RpcMsg msg, ByteBuf out) throws Exception {
+        // 编码
+        msg.encode(out);
     }
 
 }

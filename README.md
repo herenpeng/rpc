@@ -23,7 +23,7 @@ RPC 框架的入门，首先要使用这个 RPC 框架，搭建一个简单的 R
 <dependencies>
     <!--rpc框架依赖-->
     <dependency>
-        <groupId>org.herenpeng</groupId>
+        <groupId>com.herenpeng</groupId>
         <artifactId>rpc</artifactId>
         <version>1.0.0</version>
     </dependency>

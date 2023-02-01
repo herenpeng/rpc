@@ -8,15 +8,9 @@ import java.util.Objects;
  */
 public class RpcRsp implements Serializable {
 
-    private final long id;
-
     private Object returnData;
 
     private String exception;
-
-    public long getId() {
-        return id;
-    }
 
     public Object getReturnData() {
         return returnData;
@@ -34,17 +28,7 @@ public class RpcRsp implements Serializable {
         this.exception = exception;
     }
 
-    public RpcRsp(RpcReq rpcReq) {
-        this.id = rpcReq.getId();
-    }
-
-    @Override
-    public String toString() {
-        return "RpcRsp{" +
-                "id=" + id +
-                ", returnData=" + returnData +
-                ", exception='" + exception + '\'' +
-                '}';
+    public RpcRsp() {
     }
 
     @Override
@@ -56,12 +40,20 @@ public class RpcRsp implements Serializable {
             return false;
         }
         RpcRsp rpcRsp = (RpcRsp) o;
-        return id == rpcRsp.id && Objects.equals(returnData, rpcRsp.returnData) && Objects.equals(exception, rpcRsp.exception);
+        return Objects.equals(returnData, rpcRsp.returnData) &&
+                Objects.equals(exception, rpcRsp.exception);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, returnData, exception);
+        return Objects.hash(returnData, exception);
     }
 
+    @Override
+    public String toString() {
+        return "RpcRsp{" +
+                "returnData=" + returnData +
+                ", exception='" + exception + '\'' +
+                '}';
+    }
 }

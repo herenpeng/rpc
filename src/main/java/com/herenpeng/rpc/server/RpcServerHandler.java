@@ -1,8 +1,9 @@
 package com.herenpeng.rpc.server;
 
-import com.herenpeng.rpc.RpcHeartbeat;
+import com.herenpeng.rpc.RpcMsg;
 import com.herenpeng.rpc.RpcReq;
 import com.herenpeng.rpc.RpcRsp;
+import com.herenpeng.rpc.util.JsonUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -23,21 +24,33 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        if (msg instanceof RpcReq) {
-            // 处理RPC客户端请求
-            RpcReq rpcReq = (RpcReq) msg;
-            logger.info("[RPC服务端]接受到RPC请求：" + rpcReq);
-            RpcRsp rpcRsp = rpcServer.invoke(rpcReq);
-            if (rpcRsp.getReturnData() != null || rpcRsp.getException() != null) {
-                logger.info("R[RPC服务端]响应RPC请求：" + rpcRsp);
-                ctx.writeAndFlush(rpcRsp);
+    public void channelRead(ChannelHandlerContext ctx, Object obj) {
+        if (obj instanceof RpcMsg) {
+            // 处理逻辑
+            RpcMsg msg = (RpcMsg) obj;
+            switch (msg.getType()) {
+                case RpcMsg.TYPE_EMPTY:
+                    ctx.writeAndFlush(msg);
+                    logger.info("[RPC服务端]接收心跳消息，消息序列号：{}", msg.getSequence());
+                    break;
+                case RpcMsg.TYPE_REQ:
+                    logger.info("[RPC服务端]接收RPC请求消息，消息序列号：{}", msg.getSequence());
+                    RpcReq rpcReq = JsonUtils.toObject(msg.getData(), RpcReq.class);
+                    RpcRsp rpcRsp = rpcServer.invoke(rpcReq);
+                    if (rpcRsp.getReturnData() != null || rpcRsp.getException() != null) {
+                        logger.info("[RPC服务端]响应RPC请求消息，消息序列号：{}", msg.getSequence());
+                        byte[] data = JsonUtils.toBytes(rpcRsp);
+                        RpcMsg rpcMsg = new RpcMsg(RpcMsg.TYPE_RSP, msg.getSequence(), data);
+                        ctx.writeAndFlush(rpcMsg);
+                    }
+                    break;
+                case RpcMsg.TYPE_RSP:
+                    break;
+                case RpcMsg.TYPE_ERROR:
+                    break;
+                default:
+                    logger.error("[RPC服务端]错误的消息类型：{}，消息序列号：{}", msg.getType(), msg.getSequence());
             }
-        } else if (msg instanceof RpcHeartbeat) {
-            // 处理RPC心跳
-            RpcHeartbeat rpcHeartbeat = (RpcHeartbeat) msg;
-            ctx.writeAndFlush(rpcHeartbeat);
-            logger.info("[RPC服务端]接收到心跳，心跳id：{}", rpcHeartbeat.id());
         }
     }
 
