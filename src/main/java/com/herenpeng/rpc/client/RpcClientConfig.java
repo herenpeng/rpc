@@ -12,7 +12,7 @@ import java.util.Properties;
  */
 public class RpcClientConfig extends RpcConfig {
 
-    // 同步调用超时时长，默认 3 秒
+    // 同步调用超时时长，默认1000毫秒
     private long syncTimeout;
 
     // 默认重连时间间隔，默认 3 秒
@@ -25,7 +25,7 @@ public class RpcClientConfig extends RpcConfig {
     private int heartbeatInvalidTimes;
 
     public RpcClientConfig() {
-        this.syncTimeout = getLong(rpcClientConfigPrefix, "connection.sync-timeout", 3000L);
+        this.syncTimeout = getLong(rpcClientConfigPrefix, "connection.sync-timeout", 1000L);
         this.reconnectionTime = getLong(rpcClientConfigPrefix, "connection.reconnection-time", 3000L);
         this.heartbeatTime = getLong(rpcClientConfigPrefix, "heartbeat.time", 10000L);
         this.heartbeatInvalidTimes = getInt(rpcClientConfigPrefix, "heartbeat.invalid-times", 3);

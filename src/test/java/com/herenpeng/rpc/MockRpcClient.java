@@ -2,7 +2,7 @@ package com.herenpeng.rpc;
 
 import com.herenpeng.rpc.client.RpcClient;
 
-import static com.herenpeng.rpc.util.RpcUtils.panic;
+import static com.herenpeng.rpc.kit.RpcKit.panic;
 
 /**
  * @author herenpeng

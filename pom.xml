@@ -6,7 +6,7 @@
 
     <groupId>com.herenpeng</groupId>
     <artifactId>rpc</artifactId>
-    <version>1.0.0</version>
+    <version>${rpc.version}</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -18,6 +18,8 @@
         <rpc.version>1.0.0</rpc.version>
         <netty-all.version>4.1.67.Final</netty-all.version>
         <slf4j-api.version>1.7.13</slf4j-api.version>
+        <jackson-databind.version>2.12.5</jackson-databind.version>
+        <logback-classic.version>1.2.3</logback-classic.version>
     </properties>
 
     <dependencies>
@@ -34,7 +36,13 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.12.5</version>
+            <version>${jackson-databind.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback-classic.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

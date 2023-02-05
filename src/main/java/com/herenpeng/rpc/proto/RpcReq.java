@@ -1,8 +1,7 @@
-package com.herenpeng.rpc;
+package com.herenpeng.rpc.proto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.herenpeng.rpc.client.RpcCallback;
-import com.herenpeng.rpc.util.JsonUtils;
+import com.herenpeng.rpc.RpcCallback;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -21,9 +20,11 @@ public class RpcReq implements Serializable {
 
     private Object[] params;
 
-    // 使用 transient 关键字修饰，不进行序列化
+    /**
+     * 使用 transient 关键字修饰，不进行序列化
+     */
     @JsonIgnore
-    private transient RpcCallback callback;
+    private transient RpcCallback<?> callback;
 
 
     public String getClassName() {
@@ -50,14 +51,13 @@ public class RpcReq implements Serializable {
         this.params = params;
     }
 
-    public RpcCallback getCallback() {
+    public RpcCallback<?> getCallback() {
         return callback;
     }
 
-    public void setCallback(RpcCallback callback) {
+    public void setCallback(RpcCallback<?> callback) {
         this.callback = callback;
     }
-
 
     public RpcReq() {
 

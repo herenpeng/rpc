@@ -1,9 +1,7 @@
 package com.herenpeng.rpc.server;
 
-import com.herenpeng.rpc.RpcMsg;
-import com.herenpeng.rpc.RpcReq;
-import com.herenpeng.rpc.RpcRsp;
-import com.herenpeng.rpc.util.JsonUtils;
+import com.herenpeng.rpc.proto.*;
+import com.herenpeng.rpc.kit.JsonUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -25,28 +23,28 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object obj) {
-        if (obj instanceof RpcMsg) {
+        Protocol protocol = (Protocol) obj;
+        if (obj instanceof RpcProto) {
+            // 将对象强转为协议对象
             // 处理逻辑
-            RpcMsg msg = (RpcMsg) obj;
+            RpcProto msg = (RpcProto) obj;
             switch (msg.getType()) {
-                case RpcMsg.TYPE_EMPTY:
+                case RpcProto.TYPE_EMPTY:
                     ctx.writeAndFlush(msg);
                     logger.info("[RPC服务端]接收心跳消息，消息序列号：{}", msg.getSequence());
                     break;
-                case RpcMsg.TYPE_REQ:
+                case RpcProto.TYPE_REQ:
                     logger.info("[RPC服务端]接收RPC请求消息，消息序列号：{}", msg.getSequence());
                     RpcReq rpcReq = JsonUtils.toObject(msg.getData(), RpcReq.class);
                     RpcRsp rpcRsp = rpcServer.invoke(rpcReq);
                     if (rpcRsp.getReturnData() != null || rpcRsp.getException() != null) {
                         logger.info("[RPC服务端]响应RPC请求消息，消息序列号：{}", msg.getSequence());
                         byte[] data = JsonUtils.toBytes(rpcRsp);
-                        RpcMsg rpcMsg = new RpcMsg(RpcMsg.TYPE_RSP, msg.getSequence(), data);
+                        RpcProto rpcMsg = new RpcProto(RpcProto.TYPE_RSP, msg.getSequence(), data);
                         ctx.writeAndFlush(rpcMsg);
                     }
                     break;
-                case RpcMsg.TYPE_RSP:
-                    break;
-                case RpcMsg.TYPE_ERROR:
+                case RpcProto.TYPE_RSP:
                     break;
                 default:
                     logger.error("[RPC服务端]错误的消息类型：{}，消息序列号：{}", msg.getType(), msg.getSequence());

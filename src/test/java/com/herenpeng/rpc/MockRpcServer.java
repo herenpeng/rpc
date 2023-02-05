@@ -11,7 +11,7 @@ public class MockRpcServer {
     public static void main(String[] args) {
 
         RpcServer rpcServer = new RpcServer();
-        rpcServer.start(10000);
+        rpcServer.start(10000, MockRpcServer.class);
     }
 
 }

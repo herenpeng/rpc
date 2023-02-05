@@ -1,4 +1,4 @@
-package com.herenpeng.rpc;
+package com.herenpeng.rpc.proto;
 
 import java.io.Serializable;
 import java.util.Objects;

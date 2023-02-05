@@ -1,9 +1,8 @@
 package com.herenpeng.rpc.client;
 
-import com.herenpeng.rpc.RpcMsg;
-import com.herenpeng.rpc.RpcReq;
-import com.herenpeng.rpc.RpcRsp;
-import com.herenpeng.rpc.util.JsonUtils;
+import com.herenpeng.rpc.proto.RpcProto;
+import com.herenpeng.rpc.proto.RpcRsp;
+import com.herenpeng.rpc.kit.JsonUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -25,22 +24,20 @@ public class RpcClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object obj) {
-        if (obj instanceof RpcMsg) {
+        if (obj instanceof RpcProto) {
             // 处理逻辑
-            RpcMsg msg = (RpcMsg) obj;
+            RpcProto msg = (RpcProto) obj;
             switch (msg.getType()) {
-                case RpcMsg.TYPE_EMPTY:
+                case RpcProto.TYPE_EMPTY:
                     // 处理RPC心跳
                     rpcServerProxy.confirmHeartbeat(msg.getSequence());
                     break;
-                case RpcMsg.TYPE_REQ:
+                case RpcProto.TYPE_REQ:
                     break;
-                case RpcMsg.TYPE_RSP:
+                case RpcProto.TYPE_RSP:
                     // 处理RPC服务端响应
                     RpcRsp rpcRsp = JsonUtils.toObject(msg.getData(), RpcRsp.class);
                     rpcServerProxy.setRpcRsp(msg.getSequence(), rpcRsp);
-                    break;
-                case RpcMsg.TYPE_ERROR:
                     break;
                 default:
                     logger.error("[RPC服务端]错误的请求类型：{}，请求序列号：{}", msg.getType(), msg.getSequence());

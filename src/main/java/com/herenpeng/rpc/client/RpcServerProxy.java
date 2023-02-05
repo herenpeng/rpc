@@ -1,11 +1,15 @@
 package com.herenpeng.rpc.client;
 
 import com.herenpeng.rpc.*;
-import com.herenpeng.rpc.annotation.RpcClientApi;
+import com.herenpeng.rpc.annotation.RpcApi;
 import com.herenpeng.rpc.exception.RpcException;
-import com.herenpeng.rpc.util.JsonUtils;
-import com.herenpeng.rpc.util.RpcScheduler;
-import com.herenpeng.rpc.util.StringUtils;
+import com.herenpeng.rpc.RpcCallback;
+import com.herenpeng.rpc.proto.RpcProto;
+import com.herenpeng.rpc.proto.RpcReq;
+import com.herenpeng.rpc.proto.RpcRsp;
+import com.herenpeng.rpc.kit.JsonUtils;
+import com.herenpeng.rpc.kit.RpcScheduler;
+import com.herenpeng.rpc.kit.StringUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -20,7 +24,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author herenpeng
@@ -29,8 +33,10 @@ public class RpcServerProxy {
 
     private static final Logger logger = LoggerFactory.getLogger(RpcServerProxy.class);
 
-    // RPC 请求 Id
-    private final AtomicLong rpcReqId = new AtomicLong();
+    /**
+     * RPC 请求序列号
+     */
+    private final AtomicInteger rpcReqSequence = new AtomicInteger();
 
     private Channel session;
     private final RpcServerProxy instance;
@@ -46,16 +52,18 @@ public class RpcServerProxy {
         return async ? asyncRpcServer : syncRpcServer;
     }
 
-    private static final Map<Long, RpcRsp> rpcRspEvents = new ConcurrentHashMap<>();
-    // 异步请求Id
-    private static final Map<Long, RpcCallback> rpcAsyncCallbackEvents = new ConcurrentHashMap<>();
+    private static final Map<Integer, RpcRsp> rspEvents = new ConcurrentHashMap<>();
+    /**
+     * 异步请求回调事件
+     */
+    private static final Map<Integer, RpcCallback> callbackEvents = new ConcurrentHashMap<>();
 
-    public void setRpcRsp(long sequence, RpcRsp rpcRsp) {
-        if (rpcAsyncCallbackEvents.containsKey(sequence)) {
+    public void setRpcRsp(int sequence, RpcRsp rpcRsp) {
+        if (callbackEvents.containsKey(sequence)) {
             // 异步事件，检查回调函数
             checkCallback(sequence, rpcRsp);
         } else {
-            rpcRspEvents.put(sequence, rpcRsp);
+            rspEvents.put(sequence, rpcRsp);
         }
     }
 
@@ -145,12 +153,12 @@ public class RpcServerProxy {
         long startTime = System.currentTimeMillis();
         RpcReq rpcReq = generateRpcReq(method, args, async);
         byte[] data = JsonUtils.toBytes(rpcReq);
-        RpcMsg msg = new RpcMsg(RpcMsg.TYPE_REQ, rpcReqId.incrementAndGet(), data);
+        RpcProto msg = new RpcProto(RpcProto.TYPE_REQ, rpcReqSequence.incrementAndGet(), data);
         this.session.writeAndFlush(msg);
 
         // 异步调用
         if (async) {
-            rpcAsyncCallbackEvents.put(msg.getSequence(), rpcReq.getCallback());
+            callbackEvents.put(msg.getSequence(), rpcReq.getCallback());
             return null;
         }
         // 同步调用
@@ -160,7 +168,7 @@ public class RpcServerProxy {
             if ((currentTime - startTime) > rpcConfig.getSyncTimeout()) {
                 return null;
             }
-            if ((rpcRsp = rpcRspEvents.remove(msg.getSequence())) != null) {
+            if ((rpcRsp = rspEvents.remove(msg.getSequence())) != null) {
                 if (StringUtils.isNotEmpty(rpcRsp.getException())) {
                     throw new RpcException("[RPC客户端]RPC服务端响应异常信息：" + rpcRsp.getException());
                 }
@@ -176,8 +184,8 @@ public class RpcServerProxy {
         if (!rpcClientClass.isInterface()) {
             throw new RpcException("[RPC客户端]服务代理" + rpcClientClassName + "必须是接口类型");
         }
-        if (!rpcClientClass.isAnnotationPresent(RpcClientApi.class)) {
-            throw new RpcException("[RPC客户端]服务代理" + rpcClientClassName + "不存在，请检查@RpcClientApi注解");
+        if (!rpcClientClass.isAnnotationPresent(RpcApi.class)) {
+            throw new RpcException("[RPC客户端]服务代理" + rpcClientClassName + "不存在，请检查@RpcApi注解");
         }
         RpcReq rpcReq = new RpcReq(rpcClientClassName, method.getName());
         // 异步调用的最后一个参数必须是 Runnable 接口
@@ -215,14 +223,14 @@ public class RpcServerProxy {
     }
 
     // 检查RPC异步回调信息
-    private void checkCallback(long sequence, RpcRsp rpcRsp) {
-        RpcCallback callback = rpcAsyncCallbackEvents.get(sequence);
+    private void checkCallback(int sequence, RpcRsp rpcRsp) {
+        RpcCallback callback = callbackEvents.get(sequence);
         if (callback == null) {
             return;
         }
         // 异步回调，使用线程池执行 runnable 接口
         String exception = rpcRsp.getException();
-        callback.run(rpcRsp.getReturnData(), StringUtils.isNotEmpty(exception) ?
+        callback.response(rpcRsp.getReturnData(), StringUtils.isNotEmpty(exception) ?
                 new RpcException(exception) : null);
     }
 
@@ -233,15 +241,15 @@ public class RpcServerProxy {
         logger.info("[RPC客户端]端{}服务代理初始化定时任务成功", name);
     }
 
-    private static final AtomicLong heartbeatSequence = new AtomicLong();
-    private static final Queue<Long> clientHeartbeatQueue = new ConcurrentLinkedQueue<>();
+    private static final AtomicInteger heartbeatSequence = new AtomicInteger();
+    private static final Queue<Integer> clientHeartbeatQueue = new ConcurrentLinkedQueue<>();
 
     private void initHeartbeat() {
         RpcScheduler.doLoopTask(() -> {
             checkHeartbeat();
             clientHeartbeatQueue.offer(heartbeatSequence.incrementAndGet());
             // 构造一个消息
-            RpcMsg rpcMsg = new RpcMsg(RpcMsg.TYPE_EMPTY, heartbeatSequence.get());
+            RpcProto rpcMsg = new RpcProto(RpcProto.TYPE_EMPTY, heartbeatSequence.get());
             this.session.writeAndFlush(rpcMsg);
             logger.info("[RPC客户端]发送心跳消息：消息序列号：{}", rpcMsg.getSequence());
         }, rpcConfig.getHeartbeatTime(), rpcConfig.getHeartbeatTime());
@@ -255,9 +263,9 @@ public class RpcServerProxy {
     }
 
     // 确认心跳信息
-    public void confirmHeartbeat(long sequence) {
+    public void confirmHeartbeat(int sequence) {
         while (true) {
-            Long clientHeartbeat = clientHeartbeatQueue.peek();
+            Integer clientHeartbeat = clientHeartbeatQueue.peek();
             if (clientHeartbeat == null) {
                 // 可能是客户端重启导致心跳丢失，不重要
                 continue;

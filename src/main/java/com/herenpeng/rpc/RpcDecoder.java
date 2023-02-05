@@ -1,11 +1,11 @@
 package com.herenpeng.rpc;
 
+import com.herenpeng.rpc.proto.Protocol;
+import com.herenpeng.rpc.proto.ProtocolManager;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
 import java.util.List;
 
 /**
@@ -16,9 +16,10 @@ public class RpcDecoder extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         // 解码
-        RpcMsg msg = new RpcMsg();
-        msg.decode(in);
-        out.add(msg);
+        byte version = in.readByte();
+        Protocol protocol = ProtocolManager.getProtocol(version);
+        protocol.decode(in);
+        out.add(protocol);
         in.skipBytes(in.readableBytes());
     }
 }

@@ -41,10 +41,10 @@ public class RpcClient {
         return createRpc(name, targetClass, false);
     }
 
-    // RPC服务端名称，RPC目标类名称，同步或异步，代理类
+    /** RPC服务端名称，RPC目标类名称，同步或异步，代理类 */
     private static final Map<String, Map<String, Map<Boolean, Object>>> rpcMap = new ConcurrentHashMap<>();
 
-    // 是否异步 async
+    /** 是否异步 async */
     private <T> T createRpc(String name, Class<?> targetClass, boolean async) {
         RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);
         if (rpcServerProxy == null) {
