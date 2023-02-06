@@ -1,10 +1,8 @@
 package com.herenpeng.rpc.proto;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * @author herenpeng
@@ -38,4 +36,18 @@ public interface Protocol extends Serializable {
      * @param in
      */
     void decode(ByteBuf in);
+
+    /**
+     * 获取协议处理器
+     *
+     * @return
+     */
+    ProtocolProcessor getProcessor();
+
+    /**
+     * 协议构造者方法
+     *
+     * @return
+     */
+    ProtocolBuilder newBuilder();
 }

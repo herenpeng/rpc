@@ -24,6 +24,8 @@ public class RpcProto implements Protocol {
      */
     public static final byte TYPE_RSP = 2;
 
+    private static final ProtocolProcessor processor = new RpcProtoProcessor();
+
     /**
      * 协议版本号，用于后期扩展协议，默认为1
      */
@@ -89,6 +91,10 @@ public class RpcProto implements Protocol {
         }
     }
 
+    @Override
+    public ProtocolProcessor getProcessor() {
+        return processor;
+    }
 
     @Override
     public byte getVersion() {
@@ -164,4 +170,19 @@ public class RpcProto implements Protocol {
                 ", data=" + Arrays.toString(data) +
                 '}';
     }
+
+
+    @Override
+    public ProtocolBuilder newBuilder() {
+        return new Builder();
+    }
+
+    public static class Builder implements ProtocolBuilder {
+
+        @Override
+        public Protocol builder() {
+            return new RpcProto();
+        }
+    }
+
 }

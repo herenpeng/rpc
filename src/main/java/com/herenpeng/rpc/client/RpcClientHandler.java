@@ -1,5 +1,7 @@
 package com.herenpeng.rpc.client;
 
+import com.herenpeng.rpc.proto.Protocol;
+import com.herenpeng.rpc.proto.ProtocolProcessor;
 import com.herenpeng.rpc.proto.RpcProto;
 import com.herenpeng.rpc.proto.RpcRsp;
 import com.herenpeng.rpc.kit.JsonUtils;
@@ -24,25 +26,9 @@ public class RpcClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object obj) {
-        if (obj instanceof RpcProto) {
-            // 处理逻辑
-            RpcProto msg = (RpcProto) obj;
-            switch (msg.getType()) {
-                case RpcProto.TYPE_EMPTY:
-                    // 处理RPC心跳
-                    rpcServerProxy.confirmHeartbeat(msg.getSequence());
-                    break;
-                case RpcProto.TYPE_REQ:
-                    break;
-                case RpcProto.TYPE_RSP:
-                    // 处理RPC服务端响应
-                    RpcRsp rpcRsp = JsonUtils.toObject(msg.getData(), RpcRsp.class);
-                    rpcServerProxy.setRpcRsp(msg.getSequence(), rpcRsp);
-                    break;
-                default:
-                    logger.error("[RPC服务端]错误的请求类型：{}，请求序列号：{}", msg.getType(), msg.getSequence());
-            }
-        }
+        Protocol protocol = (Protocol) obj;
+        ProtocolProcessor processor = protocol.getProcessor();
+        processor.handleClient(rpcServerProxy, ctx, obj);
     }
 
     @Override
