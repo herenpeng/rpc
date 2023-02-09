@@ -1,4 +1,4 @@
-package com.herenpeng.rpc;
+package com.herenpeng.rpc.proto;
 
 import com.herenpeng.rpc.proto.Protocol;
 import com.herenpeng.rpc.proto.ProtocolManager;

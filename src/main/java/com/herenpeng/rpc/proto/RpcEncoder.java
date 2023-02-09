@@ -1,6 +1,5 @@
-package com.herenpeng.rpc;
+package com.herenpeng.rpc.proto;
 
-import com.herenpeng.rpc.proto.Protocol;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;

@@ -60,7 +60,7 @@ public class MockRpcServer {
 ```java
 package com.herenpeng.rpc;
 
-import com.herenpeng.rpc.annotation.RpcApi;
+import com.herenpeng.rpc.annotation.RpcApi;import com.herenpeng.rpc.kit.RpcCallback;
 
 @RpcApi
 public interface UserService {

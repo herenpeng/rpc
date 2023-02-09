@@ -18,8 +18,9 @@
         <rpc.version>1.0.0</rpc.version>
         <netty-all.version>4.1.67.Final</netty-all.version>
         <slf4j-api.version>1.7.13</slf4j-api.version>
-        <jackson-databind.version>2.12.5</jackson-databind.version>
+        <jackson-dataformat-yaml.version>2.13.4</jackson-dataformat-yaml.version>
         <logback-classic.version>1.2.3</logback-classic.version>
+        <lombok.version>1.18.24</lombok.version>
     </properties>
 
     <dependencies>
@@ -34,15 +35,21 @@
             <version>${slf4j-api.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson-databind.version}</version>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>${jackson-dataformat-yaml.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback-classic.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

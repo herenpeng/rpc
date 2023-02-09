@@ -1,6 +1,9 @@
 package com.herenpeng.rpc.proto;
 
 import io.netty.buffer.ByteBuf;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -9,6 +12,9 @@ import java.util.Objects;
  * @author herenpeng
  * @since 2023-02-01 20:37
  */
+@Data
+@ToString
+@EqualsAndHashCode(callSuper = false)
 public class RpcProto implements Protocol {
 
     /**
@@ -99,76 +105,6 @@ public class RpcProto implements Protocol {
     @Override
     public byte getVersion() {
         return version;
-    }
-
-    public void setVersion(byte version) {
-        this.version = version;
-    }
-
-    public byte getType() {
-        return type;
-    }
-
-    public void setType(byte type) {
-        this.type = type;
-    }
-
-    public int getSequence() {
-        return sequence;
-    }
-
-    public void setSequence(int sequence) {
-        this.sequence = sequence;
-    }
-
-    public byte getSerialize() {
-        return serialize;
-    }
-
-    public void setSerialize(byte serialize) {
-        this.serialize = serialize;
-    }
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public void setData(byte[] data) {
-        this.data = data;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        RpcProto rpcProto = (RpcProto) o;
-        return version == rpcProto.version &&
-                type == rpcProto.type &&
-                sequence == rpcProto.sequence &&
-                serialize == rpcProto.serialize &&
-                Arrays.equals(data, rpcProto.data);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = Objects.hash(version, type, sequence, serialize);
-        result = 31 * result + Arrays.hashCode(data);
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "RpcProto{" +
-                "version=" + version +
-                ", type=" + type +
-                ", sequence=" + sequence +
-                ", serialize=" + serialize +
-                ", data=" + Arrays.toString(data) +
-                '}';
     }
 
 

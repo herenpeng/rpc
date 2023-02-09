@@ -1,5 +1,6 @@
 package com.herenpeng.rpc.client;
 
+import com.herenpeng.rpc.config.RpcClientConfig;
 import com.herenpeng.rpc.exception.RpcException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
