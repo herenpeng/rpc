@@ -1,7 +1,6 @@
 package com.herenpeng.rpc.kit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -10,9 +9,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author herenpeng
  */
+@Slf4j
 public class RpcScheduler {
-
-    private static final Logger logger = LoggerFactory.getLogger(RpcScheduler.class);
 
     private static final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 

@@ -12,9 +12,9 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-public class RpcRsp implements Serializable {
+public class RpcRsp<T> implements Serializable {
 
-    private Object returnData;
+    private T returnData;
 
     private String exception;
 

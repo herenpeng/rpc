@@ -1,20 +1,11 @@
 package com.herenpeng.rpc.config;
 
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactoryBuilder;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.InputStream;
 
 /**
@@ -36,12 +27,16 @@ public class RpcConfigProcessor {
         // 配置文件优先级：代码配置 > rpc.yaml > 默认配置
         try {
             InputStream yamlStream = RpcConfigProcessor.class.getClassLoader().getResourceAsStream("rpc.yaml");
+            if (yamlStream == null) {
+                this.rpc = new RpcConfig();
+                return;
+            }
             ObjectMapper objectMapper = new YAMLMapper();
             ObjectReader objectReader = objectMapper.readerFor(RpcConfig.class).withRootName("rpc");
             this.rpc = objectReader.readValue(yamlStream);
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error("[RPC客户端]配置解析失败");
+            logger.error("[RPC客户端]配置解析失败，请检查rpc.yaml文件的配置格式");
         }
     }
 }

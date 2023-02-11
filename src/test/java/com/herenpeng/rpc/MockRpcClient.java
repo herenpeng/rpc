@@ -19,11 +19,11 @@ public class MockRpcClient {
 
         Thread.sleep(3000);
 
-        UserService userService = rpcClient.createSyncRpc(MockRpcServer, UserService.class);
+        UserService userService = rpcClient.createRpc(MockRpcServer, UserService.class);
         String username = userService.getUsername("肖总");
         System.out.println("同步调用：" + username);
 
-        userService = rpcClient.createAsyncRpc(MockRpcServer, UserService.class);
+        // userService = rpcClient.createAsyncRpc(MockRpcServer, UserService.class);
         userService.getUsername("肖总", (data, e) -> {
             panic(e);
             System.out.println("异步调用：" + data);
