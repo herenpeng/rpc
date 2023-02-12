@@ -2,21 +2,16 @@ package com.herenpeng.rpc.client;
 
 import com.herenpeng.rpc.proto.Protocol;
 import com.herenpeng.rpc.proto.ProtocolProcessor;
-import com.herenpeng.rpc.proto.RpcProto;
-import com.herenpeng.rpc.proto.RpcRsp;
-import com.herenpeng.rpc.kit.JsonUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author herenpeng
  */
+@Slf4j
 public class RpcClientHandler extends ChannelInboundHandlerAdapter {
-
-    private static final Logger logger = LoggerFactory.getLogger(RpcClientHandler.class);
 
     private final RpcServerProxy rpcServerProxy;
 
@@ -35,7 +30,7 @@ public class RpcClientHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         Channel channel = ctx.channel();
         String channelId = channel.id().asLongText();
-        logger.info("[RPC客户端]发生异常，channelId:{}，", channelId);
+        log.info("[RPC客户端]发生异常，channelId:{}，", channelId);
         cause.printStackTrace();
     }
 

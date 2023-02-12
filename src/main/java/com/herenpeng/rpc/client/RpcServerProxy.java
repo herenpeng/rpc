@@ -26,10 +26,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author herenpeng
  */
-@Slf4j
+// @Slf4j
 public class RpcServerProxy implements InvocationHandler {
 
-    // private static final Logger log = LoggerFactory.getLogger(RpcServerProxy.class);
+    private static final Logger log = LoggerFactory.getLogger(RpcServerProxy.class);
 
     /**
      * RPC 请求序列号
@@ -41,23 +41,15 @@ public class RpcServerProxy implements InvocationHandler {
     private final String name;
     private final String host;
     private final int port;
-    private final RpcClientConfig clientConfig;
 
-    private final RpcClientCache clientCache;
+    private RpcClientConfig clientConfig;
+    private RpcClientCache clientCache;
 
-
-    // private final InvocationHandler asyncRpcServer;
-    // private final InvocationHandler syncRpcServer;
-
-    // public InvocationHandler get(boolean async) {
-    //     return async ? asyncRpcServer : syncRpcServer;
-    // }
-
-    private static final Map<Integer, RpcRsp> rspEvents = new ConcurrentHashMap<>();
+    private final Map<Integer, RpcRsp> rspEvents = new ConcurrentHashMap<>();
     /**
      * 异步请求回调事件
      */
-    private static final Map<Integer, RpcCallback> callbackEvents = new ConcurrentHashMap<>();
+     private final Map<Integer, RpcCallback> callbackEvents = new ConcurrentHashMap<>();
 
     public void setRpcRsp(int sequence, RpcRsp rpcRsp) {
         if (callbackEvents.containsKey(sequence)) {
@@ -68,34 +60,47 @@ public class RpcServerProxy implements InvocationHandler {
         }
     }
 
-    public RpcServerProxy(String name, String host, int port, RpcClientConfig clientConfig) {
+    public RpcServerProxy(String name, String host, int port, Class<?> rpcScannerClass) {
         log.info("[RPC客户端]{}服务代理正在初始化", name);
         this.instance = this;
         this.name = name;
         this.host = host;
         this.port = port;
-        // if (rpcConfig == null) {
-        //     // 使用默认配置
-        //     rpcConfig = ;
-        // }
-        this.clientConfig = clientConfig == null ? new RpcClientConfig() : clientConfig;
-        this.clientCache = new RpcClientCache();
-        log.info("[RPC客户端]配置初始化完成，配置信息：{}", clientConfig);
-        // 初始化异步代理类和同步代理类
-        // this.asyncRpcServer = new RpcServerAsyncProxy(this);
-        // this.syncRpcServer = new RpcServerSyncProxy(this);
-        init();
+        init(rpcScannerClass);
     }
 
-    public void init() {
+    public void init(Class<?> rpcScannerClass) {
         long start = System.currentTimeMillis();
+        // 初始化客户端配置
+        initRpcConfig();
+        // 初始化客户端缓存
+        initRpcClientCache(rpcScannerClass);
+        // 初始化服务端代理
         initRpcServerProxy();
+        // 初始化定时任务
         initRpcSchedule();
         long end = System.currentTimeMillis();
-        log.info("[RPC客户端]{}服务代理初始化完成，已创建{}服务代理，主机：{}，端口：{}，共耗时{}豪秒", name, name, host, port, end - start);
+        log.info("[RPC客户端]{}服务代理初始化完成，已创建{}服务代理，主机：{}，端口：{}，共耗时{}毫秒", name, name, host, port, end - start);
     }
 
-    private static Bootstrap bootstrap;
+    private void initRpcConfig() {
+        this.clientConfig = new RpcClientConfig();
+        log.info("[RPC客户端]配置初始化完成，配置信息：{}", clientConfig);
+    }
+
+    private void initRpcClientCache(Class<?> rpcScannerClass) {
+        this.clientCache = new RpcClientCache();
+
+        String packageName = rpcScannerClass.getPackageName();
+        ClassScanner scanner = new ClassScanner(packageName, (clazz) -> clazz.getAnnotation(RpcApi.class) != null);
+        List<Class<?>> classList = scanner.listClass();
+
+        this.clientCache.initMethodLocator(classList);
+        log.info("[RPC客户端]缓存初始化完成");
+    }
+
+
+    private Bootstrap bootstrap;
 
     private void initRpcServerProxy() {
         // 初始化RPC客户端
@@ -155,11 +160,8 @@ public class RpcServerProxy implements InvocationHandler {
         }
         long startTime = System.currentTimeMillis();
         RpcMethodLocator methodLocator = clientCache.getMethodLocator(method);
-        // RpcReq rpcReq = generateRpcReq(method, args, async);
         RpcReq rpcReq = new RpcReq();
-        rpcReq.setClassName(methodLocator.getClassName());
-        rpcReq.setMethodName(methodLocator.getMethodName());
-        rpcReq.setParamTypeNames(methodLocator.getParamTypeNames());
+        rpcReq.setMethodLocator(methodLocator);
         // 设置参数
         rpcReq.setParams(RpcKit.getMethodParams(args, methodLocator.isAsync()));
         byte[] data = JsonUtils.toBytes(rpcReq);
@@ -168,7 +170,7 @@ public class RpcServerProxy implements InvocationHandler {
 
         // 异步调用
         if (methodLocator.isAsync()) {
-            callbackEvents.put(msg.getSequence(), (RpcCallback<?>) args[args.length - 1]);
+            callbackEvents.put(msg.getSequence(), (RpcCallback) args[args.length - 1]);
             return null;
         }
         // 同步调用
@@ -187,54 +189,14 @@ public class RpcServerProxy implements InvocationHandler {
         }
     }
 
-
-    // private RpcReq generateRpcReq(Method method, Object[] args, boolean async) {
-    //     Class<?> rpcClientClass = method.getDeclaringClass();
-    //     String rpcClientClassName = rpcClientClass.getName();
-    //     if (!rpcClientClass.isInterface()) {
-    //         throw new RpcException("[RPC客户端]服务代理" + rpcClientClassName + "必须是接口类型");
-    //     }
-    //     if (!rpcClientClass.isAnnotationPresent(RpcApi.class)) {
-    //         throw new RpcException("[RPC客户端]服务代理" + rpcClientClassName + "不存在，请检查@RpcApi注解");
-    //     }
-    //     RpcReq rpcReq = new RpcReq(rpcClientClassName, method.getName());
-    //     // 异步调用的最后一个参数必须是 Runnable 接口
-    //     if (async) {
-    //         if (args == null || args.length < 1) {
-    //             throw new RpcException("[RPC客户端]RPC异步调用至少需要一个参数，且最后一个参数必须是RpcCallback函数式接口");
-    //         }
-    //         Class<?> returnType = method.getReturnType();
-    //         if (void.class == returnType) {
-    //             throw new RpcException("[RPC客户端]RPC异步调用必须拥有函数返回值，否则回调无效");
-    //         }
-    //         Object callback = args[args.length - 1];
-    //         if (RpcCallback.class.isAssignableFrom(callback.getClass())) {
-    //             rpcReq.setCallback((RpcCallback) args[args.length - 1]);
-    //         } else {
-    //             throw new RpcException("[RPC客户端]RPC异步调用的最后一个参数必须是RpcCallback函数式接口");
-    //         }
-    //     }
-    //
-    //     if (args != null && args.length != 0) {
-    //         // 如果是异步调用，最后一个参数不入参
-    //         int length = async ? args.length - 1 : args.length;
-    //         String[] paramTypeNames = new String[length];
-    //         Object[] params = new Object[length];
-    //         for (int i = 0; i < length; i++) {
-    //             Object arg = args[i];
-    //             String paramTypeName = arg.getClass().getName();
-    //             paramTypeNames[i] = paramTypeName;
-    //             params[i] = args[i];
-    //         }
-    //         rpcReq.setParamTypeNames(paramTypeNames);
-    //         rpcReq.setParams(params);
-    //     }
-    //     return rpcReq;
-    // }
-
-    // 检查RPC异步回调信息
-    private <T> void checkCallback(int sequence, RpcRsp<T> rpcRsp) {
-        RpcCallback<T> callback = callbackEvents.get(sequence);
+    /**
+     * 检查RPC异步回调信息
+     *
+     * @param sequence
+     * @param rpcRsp
+     */
+    private <T> void checkCallback(int sequence, RpcRsp rpcRsp) {
+        RpcCallback callback = callbackEvents.get(sequence);
         if (callback == null) {
             return;
         }
@@ -251,8 +213,8 @@ public class RpcServerProxy implements InvocationHandler {
         log.info("[RPC客户端]端{}服务代理初始化定时任务成功", name);
     }
 
-    private static final AtomicInteger heartbeatSequence = new AtomicInteger();
-    private static final Queue<Integer> clientHeartbeatQueue = new ConcurrentLinkedQueue<>();
+    private final AtomicInteger heartbeatSequence = new AtomicInteger();
+    private final Queue<Integer> clientHeartbeatQueue = new ConcurrentLinkedQueue<>();
 
     private void initHeartbeat() {
         RpcScheduler.doLoopTask(() -> {
@@ -291,39 +253,5 @@ public class RpcServerProxy implements InvocationHandler {
             }
         }
     }
-
-
-    // private static class RpcServerAsyncProxy implements InvocationHandler {
-    //
-    //     private final RpcServerProxy rpcServerProxy;
-    //
-    //     public RpcServerAsyncProxy(RpcServerProxy rpcServerProxy) {
-    //         this.rpcServerProxy = rpcServerProxy;
-    //     }
-    //
-    //     @Override
-    //     public Object invoke(Object proxy, Method method, Object[] args) {
-    //         // 异步执行
-    //         return rpcServerProxy.invoke(method, args, true);
-    //     }
-    //
-    // }
-    //
-    // private static class RpcServerSyncProxy implements InvocationHandler {
-    //
-    //     private final RpcServerProxy rpcServerProxy;
-    //
-    //     public RpcServerSyncProxy(RpcServerProxy rpcServerProxy) {
-    //         this.rpcServerProxy = rpcServerProxy;
-    //     }
-    //
-    //     @Override
-    //     public Object invoke(Object proxy, Method method, Object[] args) {
-    //         // 同步执行
-    //         return rpcServerProxy.invoke(method, args, false);
-    //     }
-    //
-    // }
-
 
 }

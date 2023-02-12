@@ -1,14 +1,12 @@
 package com.herenpeng.rpc.kit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author herenpeng
  */
+@Slf4j
 public class StringUtils {
-
-    private static final Logger logger = LoggerFactory.getLogger(StringUtils.class);
 
     /**
      * 判断字符串是否为空字符串

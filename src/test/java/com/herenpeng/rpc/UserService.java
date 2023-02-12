@@ -17,6 +17,6 @@ public interface UserService {
     /**
      * 这个getUsername方法本质并不会真的执行，只是用来注册回调函数的一个接口方法
      */
-    String getUsername(String name, RpcCallback<String> callback);
+    String getUsername(String name, RpcCallback callback);
 
 }

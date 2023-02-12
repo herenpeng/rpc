@@ -15,7 +15,7 @@ public class MockRpcClient {
     public static void main(String[] args) throws InterruptedException {
         // 创建客户端并调用方法
         RpcClient rpcClient = new RpcClient();
-        rpcClient.register(MockRpcServer, "127.0.0.1", 10000);
+        rpcClient.register(MockRpcServer, "127.0.0.1", 10000, MockRpcClient.class);
 
         Thread.sleep(3000);
 

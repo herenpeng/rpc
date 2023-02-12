@@ -1,5 +1,6 @@
 package com.herenpeng.rpc.server;
 
+import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.proto.RpcDecoder;
 import com.herenpeng.rpc.proto.RpcEncoder;
 import com.herenpeng.rpc.annotation.RpcApi;
@@ -30,7 +31,7 @@ public class RpcServer {
 
     private static final Logger logger = LoggerFactory.getLogger(RpcServer.class);
 
-    private RpcServerCache cache = new RpcServerCache();
+    private RpcServerCache serverCache = new RpcServerCache();
 
     /**
      * 本身服务实例
@@ -41,23 +42,23 @@ public class RpcServer {
         this.instance = this;
     }
 
-    public void start(int port, Class<?> rpcScanClass) {
+    public void start(int port, Class<?> rpcScannerClass) {
         logger.info("[RPC服务端]正在初始化");
         long start = System.currentTimeMillis();
         // 初始化rpc接口
-        initRpcApi(rpcScanClass);
+        initRpcApi(rpcScannerClass);
         // 初始化rpc服务端
         initRpcServer(port);
         long end = System.currentTimeMillis();
         logger.info("[RPC服务端]初始化完成，端口：{}，共耗时{}毫秒", port, end - start);
     }
 
-    private void initRpcApi(Class<?> rpcScanClass) {
-        if (rpcScanClass == null) {
+    private void initRpcApi(Class<?> rpcScannerClass) {
+        if (rpcScannerClass == null) {
             logger.warn("[RPC服务端]rpc接口包扫描类对象为空");
             return;
         }
-        String packageName = rpcScanClass.getPackageName();
+        String packageName = rpcScannerClass.getPackageName();
         ClassScanner scanner = new ClassScanner(packageName);
         List<Class<?>> classList = scanner.listClass();
         filterRpcApi(classList);
@@ -79,7 +80,7 @@ public class RpcServer {
             for (Class<?> serviceClass : serviceClassList) {
                 if (apiClass.isAssignableFrom(serviceClass)) {
                     // apiClass是serviceClass的接口
-                    cache.setApiService(apiClass, serviceClass);
+                    serverCache.setApiService(apiClass, serviceClass);
                 }
             }
         }
@@ -124,10 +125,11 @@ public class RpcServer {
         }
         RpcRsp rpcRsp = new RpcRsp();
         try {
-            Object rpcServer = cache.getRpcServer(rpcReq.getClassName());
+            RpcMethodLocator locator = rpcReq.getMethodLocator();
+            Object rpcServer = serverCache.getRpcServer(locator.getClassName());
             Class<?> rpcServerClass = rpcServer.getClass();
-            String[] paramTypeNames = rpcReq.getParamTypeNames();
-            Method method = rpcServerClass.getMethod(rpcReq.getMethodName(), cache.getParamTypes(paramTypeNames));
+            String[] paramTypeNames = locator.getParamTypeNames();
+            Method method = rpcServerClass.getMethod(locator.getMethodName(), serverCache.getParamTypes(paramTypeNames));
             // 执行方法
             Object returnData = method.invoke(rpcServer, rpcReq.getParams());
             rpcRsp.setReturnData(returnData);
