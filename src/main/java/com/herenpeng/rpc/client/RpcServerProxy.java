@@ -3,6 +3,8 @@ package com.herenpeng.rpc.client;
 import com.herenpeng.rpc.annotation.RpcApi;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcClientConfig;
+import com.herenpeng.rpc.config.RpcConfig;
+import com.herenpeng.rpc.config.RpcConfigProcessor;
 import com.herenpeng.rpc.exception.RpcException;
 import com.herenpeng.rpc.kit.*;
 import com.herenpeng.rpc.proto.*;
@@ -13,8 +15,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -26,10 +26,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author herenpeng
  */
-// @Slf4j
+@Slf4j
 public class RpcServerProxy implements InvocationHandler {
-
-    private static final Logger log = LoggerFactory.getLogger(RpcServerProxy.class);
 
     /**
      * RPC 请求序列号
@@ -42,14 +40,15 @@ public class RpcServerProxy implements InvocationHandler {
     private final String host;
     private final int port;
 
+    private RpcConfig config;
     private RpcClientConfig clientConfig;
-    private RpcClientCache clientCache;
+    private RpcClientCache cache;
 
     private final Map<Integer, RpcRsp> rspEvents = new ConcurrentHashMap<>();
     /**
      * 异步请求回调事件
      */
-     private final Map<Integer, RpcCallback> callbackEvents = new ConcurrentHashMap<>();
+    private final Map<Integer, RpcCallback> callbackEvents = new ConcurrentHashMap<>();
 
     public void setRpcRsp(int sequence, RpcRsp rpcRsp) {
         if (callbackEvents.containsKey(sequence)) {
@@ -84,18 +83,18 @@ public class RpcServerProxy implements InvocationHandler {
     }
 
     private void initRpcConfig() {
-        this.clientConfig = new RpcClientConfig();
-        log.info("[RPC客户端]配置初始化完成，配置信息：{}", clientConfig);
+        RpcConfigProcessor processor = new RpcConfigProcessor();
+        this.config = processor.getRpc();
+        this.clientConfig = this.config == null ? new RpcClientConfig() : this.config.getClient();
+        log.info("[RPC客户端]配置初始化完成，配置信息：{}", config);
     }
 
     private void initRpcClientCache(Class<?> rpcScannerClass) {
-        this.clientCache = new RpcClientCache();
-
+        this.cache = new RpcClientCache();
         String packageName = rpcScannerClass.getPackageName();
         ClassScanner scanner = new ClassScanner(packageName, (clazz) -> clazz.getAnnotation(RpcApi.class) != null);
         List<Class<?>> classList = scanner.listClass();
-
-        this.clientCache.initMethodLocator(classList);
+        this.cache.initMethodLocator(classList);
         log.info("[RPC客户端]缓存初始化完成");
     }
 
@@ -159,18 +158,19 @@ public class RpcServerProxy implements InvocationHandler {
             throw new RpcException("[RPC客户端]初始化失败，Socket Channel未激活，请重新初始化客户端");
         }
         long startTime = System.currentTimeMillis();
-        RpcMethodLocator methodLocator = clientCache.getMethodLocator(method);
+        RpcMethodLocator methodLocator = cache.getMethodLocator(method);
         RpcReq rpcReq = new RpcReq();
         rpcReq.setMethodLocator(methodLocator);
         // 设置参数
-        rpcReq.setParams(RpcKit.getMethodParams(args, methodLocator.isAsync()));
+        RpcCallback callback = RpcKit.getRpcCallback(args, methodLocator.isAsync());
+        rpcReq.setParams(args);
         byte[] data = JsonUtils.toBytes(rpcReq);
         RpcProto msg = new RpcProto(RpcProto.TYPE_REQ, rpcReqSequence.incrementAndGet(), data);
         this.session.writeAndFlush(msg);
 
         // 异步调用
         if (methodLocator.isAsync()) {
-            callbackEvents.put(msg.getSequence(), (RpcCallback) args[args.length - 1]);
+            callbackEvents.put(msg.getSequence(), callback);
             return null;
         }
         // 同步调用
@@ -223,7 +223,9 @@ public class RpcServerProxy implements InvocationHandler {
             // 构造一个消息
             RpcProto rpcMsg = new RpcProto(RpcProto.TYPE_EMPTY, heartbeatSequence.get());
             this.session.writeAndFlush(rpcMsg);
-            log.info("[RPC客户端]发送心跳消息：消息序列号：{}", rpcMsg.getSequence());
+            if (this.clientConfig.isHeartbeatLogEnable()) {
+                log.info("[RPC客户端]发送心跳消息：消息序列号：{}", rpcMsg.getSequence());
+            }
         }, clientConfig.getHeartbeatTime(), clientConfig.getHeartbeatTime());
     }
 
@@ -248,7 +250,10 @@ public class RpcServerProxy implements InvocationHandler {
             // 如果客户端取出来的心跳消息序列号小于等于服务端响应的心跳消息序列号，直接移除客户端的心跳数据
             clientHeartbeatQueue.poll();
             if (clientHeartbeat == sequence) {
+                if (this.clientConfig.isHeartbeatLogEnable()) {
                 log.info("[RPC客户端]确认心跳消息，消息序列号：{}", clientHeartbeat);
+
+                }
                 return;
             }
         }

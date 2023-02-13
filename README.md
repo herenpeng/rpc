@@ -69,7 +69,7 @@ public interface UserService {
 
     String getUsername(String name);
 
-    String getUsername(String name, RpcCallback<String> callback);
+    String getUsername(String name, RpcCallback callback);
 
 }
 ```
@@ -89,8 +89,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String getUsername(String name, RpcCallback<String> callback) {
-        return null;
+    public String getUsername(String name, RpcCallback callback) {
+        return getUsername(name);
     }
 
 }
@@ -114,7 +114,7 @@ public class MockRpcClient {
     public static void main(String[] args) throws InterruptedException {
         // 创建客户端并调用方法
         RpcClient rpcClient = new RpcClient();
-        rpcClient.register(MockRpcServer, "127.0.0.1", 10000);
+        rpcClient.register(MockRpcServer, "127.0.0.1", 10000, MockRpcClient.class);
     }
 }
 ```
@@ -137,15 +137,14 @@ public class MockRpcClient {
     public static void main(String[] args) throws InterruptedException {
         // 创建客户端并调用方法
         RpcClient rpcClient = new RpcClient();
-        rpcClient.register(MockRpcServer, "127.0.0.1", 10000);
+        rpcClient.register(MockRpcServer, "127.0.0.1", 10000, MockRpcClient.class);
 
         Thread.sleep(3000);
 
-        UserService userService = rpcClient.createSyncRpc(MockRpcServer, UserService.class);
+        UserService userService = rpcClient.createRpc(MockRpcServer, UserService.class);
         String username = userService.getUsername("肖总");
         System.out.println("同步调用：" + username);
-
-        userService = rpcClient.createAsyncRpc(MockRpcServer, UserService.class);
+        
         userService.getUsername("肖总", (data, e) -> {
             panic(e);
             System.out.println("异步调用：" + data);
@@ -161,4 +160,4 @@ public class MockRpcClient {
 
 2、rpc的服务端接口必须要注解`@RpcService`，客户端接口必须要注解`@RpcApi`。
 
-3、rpc的异步调用，接口方法参数中多一个`RpcCallback`的函数式接口参数，用于处理rpc的异步回调事件，其实现类可以不用实现含有`RpcCallback`参数的实现方法，默认调用无`RpcCallback`参数的实现方法。。
+3、rpc的异步调用，接口方法参数中多一个`RpcCallback`的函数式接口参数，用于处理rpc的异步回调事件，服务端该参数为`null`。

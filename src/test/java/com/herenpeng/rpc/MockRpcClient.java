@@ -23,7 +23,6 @@ public class MockRpcClient {
         String username = userService.getUsername("肖总");
         System.out.println("同步调用：" + username);
 
-        // userService = rpcClient.createAsyncRpc(MockRpcServer, UserService.class);
         userService.getUsername("肖总", (data, e) -> {
             panic(e);
             System.out.println("异步调用：" + data);

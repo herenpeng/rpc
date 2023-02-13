@@ -22,7 +22,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String getUsername(String name, RpcCallback callback) {
-        return null;
+        return getUsername(name);
     }
 
 }

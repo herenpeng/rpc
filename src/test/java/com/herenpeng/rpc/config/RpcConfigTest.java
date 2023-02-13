@@ -11,6 +11,8 @@ public class RpcConfigTest {
         RpcConfig rpc = processor.getRpc();
         RpcClientConfig client = rpc.getClient();
         System.out.println(client);
+        RpcServerConfig server = rpc.getServer();
+        System.out.println(server);
 
     }
 

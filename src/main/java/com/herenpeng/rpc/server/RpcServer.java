@@ -1,13 +1,12 @@
 package com.herenpeng.rpc.server;
 
+import com.herenpeng.rpc.common.RpcMethodInvoke;
 import com.herenpeng.rpc.common.RpcMethodLocator;
-import com.herenpeng.rpc.proto.RpcDecoder;
-import com.herenpeng.rpc.proto.RpcEncoder;
-import com.herenpeng.rpc.annotation.RpcApi;
-import com.herenpeng.rpc.annotation.RpcService;
+import com.herenpeng.rpc.config.RpcConfig;
+import com.herenpeng.rpc.config.RpcConfigProcessor;
+import com.herenpeng.rpc.config.RpcServerConfig;
+import com.herenpeng.rpc.proto.*;
 import com.herenpeng.rpc.kit.ClassScanner;
-import com.herenpeng.rpc.proto.RpcReq;
-import com.herenpeng.rpc.proto.RpcRsp;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -15,75 +14,67 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author herenpeng
  */
+@Slf4j
 public class RpcServer {
-
-    private static final Logger logger = LoggerFactory.getLogger(RpcServer.class);
-
-    private RpcServerCache serverCache = new RpcServerCache();
 
     /**
      * 本身服务实例
      */
     private final RpcServer instance;
+    private RpcConfig config;
+    private RpcServerConfig serverConfig;
+    private RpcServerCache cache;
+
 
     public RpcServer() {
         this.instance = this;
     }
 
     public void start(int port, Class<?> rpcScannerClass) {
-        logger.info("[RPC服务端]正在初始化");
+        log.info("[RPC服务端]正在初始化");
         long start = System.currentTimeMillis();
+        // 初始化rpc配置
+        initRpcConfig();
+        // 初始化rpc缓存
+        initRpcCache(rpcScannerClass);
         // 初始化rpc接口
-        initRpcApi(rpcScannerClass);
+        // initRpcApi(rpcScannerClass);
         // 初始化rpc服务端
         initRpcServer(port);
         long end = System.currentTimeMillis();
-        logger.info("[RPC服务端]初始化完成，端口：{}，共耗时{}毫秒", port, end - start);
+        log.info("[RPC服务端]初始化完成，端口：{}，共耗时{}毫秒", port, end - start);
     }
 
-    private void initRpcApi(Class<?> rpcScannerClass) {
+
+    private void initRpcConfig() {
+        RpcConfigProcessor processor = new RpcConfigProcessor();
+        this.config = processor.getRpc();
+        this.serverConfig = this.config == null ? new RpcServerConfig() : this.config.getServer();
+        log.info("[RPC服务端]配置初始化完成，配置信息：{}", config);
+    }
+
+    private void initRpcCache(Class<?> rpcScannerClass) {
+        cache = new RpcServerCache();
         if (rpcScannerClass == null) {
-            logger.warn("[RPC服务端]rpc接口包扫描类对象为空");
+            log.warn("[RPC服务端]rpc接口包扫描类对象为空");
             return;
         }
         String packageName = rpcScannerClass.getPackageName();
         ClassScanner scanner = new ClassScanner(packageName);
         List<Class<?>> classList = scanner.listClass();
-        filterRpcApi(classList);
-    }
 
-    private void filterRpcApi(List<Class<?>> classList) {
-        List<Class<?>> apiClassList = new ArrayList<>();
-        List<Class<?>> serviceClassList = new ArrayList<>();
-        classList.forEach((clazz) -> {
-            if (clazz.getAnnotation(RpcApi.class) != null) {
-                apiClassList.add(clazz);
-            }
-            if (clazz.getAnnotation(RpcService.class) != null) {
-                serviceClassList.add(clazz);
-            }
-        });
-        // 接口和实现的映射
-        for (Class<?> apiClass : apiClassList) {
-            for (Class<?> serviceClass : serviceClassList) {
-                if (apiClass.isAssignableFrom(serviceClass)) {
-                    // apiClass是serviceClass的接口
-                    serverCache.setApiService(apiClass, serviceClass);
-                }
-            }
-        }
+        cache.initMethodInvoke(classList);
+        log.info("[RPC服务端]缓存初始化完成");
     }
 
     private void initRpcServer(int port) {
@@ -119,6 +110,14 @@ public class RpcServer {
     }
 
 
+    public void handleHeartbeat(RpcProto msg, ChannelHandlerContext ctx) {
+        ctx.writeAndFlush(msg);
+        if (this.serverConfig.isHeartbeatLogEnable()) {
+            log.info("[RPC服务端]接收心跳消息，消息序列号：{}", msg.getSequence());
+        }
+    }
+
+
     public RpcRsp invoke(RpcReq rpcReq) {
         if (rpcReq == null) {
             throw new IllegalArgumentException("[RPC服务端]rpcReq不允许为null");
@@ -126,15 +125,14 @@ public class RpcServer {
         RpcRsp rpcRsp = new RpcRsp();
         try {
             RpcMethodLocator locator = rpcReq.getMethodLocator();
-            Object rpcServer = serverCache.getRpcServer(locator.getClassName());
-            Class<?> rpcServerClass = rpcServer.getClass();
-            String[] paramTypeNames = locator.getParamTypeNames();
-            Method method = rpcServerClass.getMethod(locator.getMethodName(), serverCache.getParamTypes(paramTypeNames));
+            RpcMethodInvoke methodInvoke = cache.getMethodInvoke(locator);
+            Object rpcServer = methodInvoke.getRpcServer();
+            Method method = methodInvoke.getMethod();
             // 执行方法
             Object returnData = method.invoke(rpcServer, rpcReq.getParams());
             rpcRsp.setReturnData(returnData);
         } catch (Exception e) {
-            logger.error("[RPC服务端]服务端执行方法发生异常");
+            log.error("[RPC服务端]服务端执行方法发生异常");
             Throwable exception = e;
             if (e instanceof InvocationTargetException) {
                 exception = ((InvocationTargetException) e).getTargetException();

@@ -39,15 +39,14 @@ public class RpcKit {
     }
 
 
-    public static Object[] getMethodParams(Object[] args, boolean async) {
+    public static RpcCallback getRpcCallback(Object[] args, boolean async) {
         if (!async) {
-            return args;
+            return null;
         }
         // 异步
-        int length = args.length - 1;
-        Object[] params = new Object[length];
-        System.arraycopy(args, 0, params, 0, length);
-        return params;
+        RpcCallback callback = (RpcCallback) args[args.length - 1];
+        args[args.length - 1] = null;
+        return callback;
     }
 
 

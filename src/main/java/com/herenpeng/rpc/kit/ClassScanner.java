@@ -1,5 +1,6 @@
 package com.herenpeng.rpc.kit;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,9 +20,8 @@ import java.util.jar.JarFile;
  * @author herenpeng
  * @since 2023-02-04 10:52
  */
+@Slf4j
 public class ClassScanner {
-
-    private static final Logger logger = LoggerFactory.getLogger(ClassScanner.class);
 
     private final Set<Class<?>> classSet = new HashSet<>();
 
@@ -66,7 +66,7 @@ public class ClassScanner {
                 }
             }
         } catch (Exception e) {
-            logger.error("[RPC服务端]rpc包扫描错误，包扫描路径：{}，e：{}", packagePath, e);
+            log.error("[RPC服务端]rpc包扫描错误，包扫描路径：{}，e：{}", packagePath, e);
             e.printStackTrace();
         }
         return new ArrayList<>(classSet);
@@ -162,7 +162,7 @@ public class ClassScanner {
                 }
             }
         } catch (Throwable e) {
-            logger.error("[RPC服务端]加载class文件错误，加载的class文件名称，{}，e：{}", className, e);
+            log.error("[RPC服务端]加载class文件错误，加载的class文件名称，{}，e：{}", className, e);
         }
     }
 
