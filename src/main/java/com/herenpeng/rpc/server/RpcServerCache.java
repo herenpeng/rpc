@@ -4,11 +4,8 @@ import com.herenpeng.rpc.annotation.RpcApi;
 import com.herenpeng.rpc.annotation.RpcService;
 import com.herenpeng.rpc.common.RpcMethodInvoke;
 import com.herenpeng.rpc.common.RpcMethodLocator;
-import com.herenpeng.rpc.exception.RpcException;
 import com.herenpeng.rpc.kit.RpcKit;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -33,26 +30,27 @@ public class RpcServerCache {
             List<Class<?>> apiClassList = new ArrayList<>();
             List<Class<?>> serviceClassList = new ArrayList<>();
             classList.forEach((clazz) -> {
-                if (clazz.getAnnotation(RpcApi.class) != null) {
+                if (clazz.isInterface() && clazz.getAnnotation(RpcApi.class) != null) {
                     apiClassList.add(clazz);
                 }
-                if (clazz.getAnnotation(RpcService.class) != null) {
+                if (!clazz.isInterface() && clazz.getAnnotation(RpcService.class) != null) {
                     serviceClassList.add(clazz);
                 }
             });
             // 接口和实现的映射
-            for (Class<?> apiClass : apiClassList) {
-                for (Class<?> serviceClass : serviceClassList) {
+            for (Class<?> serviceClass : serviceClassList) {
+                Class<?> api = serviceClass;
+                for (Class<?> apiClass : apiClassList) {
                     if (apiClass.isAssignableFrom(serviceClass)) {
-                        // apiClass是serviceClass的接口
-                        Object rpcServer = serviceClass.getDeclaredConstructor().newInstance();
-                        Method[] methods = apiClass.getDeclaredMethods();
-                        for (Method method : methods) {
-                            RpcMethodInvoke methodInvoke = new RpcMethodInvoke(method, rpcServer);
-                            RpcMethodLocator methodLocator = RpcKit.getMethodLocator(apiClass.getName(), method);
-                            methodInvokeMap.put(methodLocator, methodInvoke);
-                        }
+                        api = apiClass;
                     }
+                }
+                Object rpcServer = serviceClass.getDeclaredConstructor().newInstance();
+                Method[] methods = api.getDeclaredMethods();
+                for (Method method : methods) {
+                    RpcMethodInvoke methodInvoke = new RpcMethodInvoke(method, rpcServer);
+                    RpcMethodLocator methodLocator = RpcKit.getMethodLocator(api.getName(), method);
+                    methodInvokeMap.put(methodLocator, methodInvoke);
                 }
             }
         } catch (Exception e) {

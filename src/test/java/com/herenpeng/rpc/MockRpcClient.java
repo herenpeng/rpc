@@ -17,7 +17,7 @@ public class MockRpcClient {
         RpcClient rpcClient = new RpcClient();
         rpcClient.register(MockRpcServer, "127.0.0.1", 10000, MockRpcClient.class);
 
-        Thread.sleep(3000);
+        Thread.sleep(1500);
 
         UserService userService = rpcClient.createRpc(MockRpcServer, UserService.class);
         String username = userService.getUsername("肖总");

@@ -23,6 +23,10 @@ public class RpcClientCache {
      */
     public void initMethodLocator(List<Class<?>> classList) {
         for (Class<?> clazz : classList) {
+            if (!clazz.isInterface()) {
+                // 必须是接口
+                continue;
+            }
             // 获取接口名称
             String className = clazz.getName();
             // 获取接口中声明的所有方法

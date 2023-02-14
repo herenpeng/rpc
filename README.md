@@ -1,8 +1,8 @@
 # RPC 框架
 
-> 基于 Netty4 的一个简易的 RPC 框架
->
-> 项目地址：https://github.com/herenpeng/rpc.git
+项目地址：https://github.com/herenpeng/rpc.git
+
+> 该项目是基于Netty4的一个简易的RPC框架
 
 ## RPC 入门
 

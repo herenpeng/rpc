@@ -1,6 +1,7 @@
 package com.herenpeng.rpc.client;
 
 import com.herenpeng.rpc.annotation.RpcApi;
+import com.herenpeng.rpc.common.RpcInfo;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcClientConfig;
 import com.herenpeng.rpc.config.RpcConfig;
@@ -48,7 +49,7 @@ public class RpcServerProxy implements InvocationHandler {
     /**
      * 异步请求回调事件
      */
-    private final Map<Integer, RpcCallback> callbackEvents = new ConcurrentHashMap<>();
+    private final Map<Integer, RpcInfo> callbackEvents = new ConcurrentHashMap<>();
 
     public void setRpcRsp(int sequence, RpcRsp rpcRsp) {
         if (callbackEvents.containsKey(sequence)) {
@@ -154,11 +155,14 @@ public class RpcServerProxy implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
-        if (!session.isActive()) {
-            throw new RpcException("[RPC客户端]初始化失败，Socket Channel未激活，请重新初始化客户端");
-        }
         long startTime = System.currentTimeMillis();
         RpcMethodLocator methodLocator = cache.getMethodLocator(method);
+        RpcInfo rpcInfo = invokeStart(startTime, methodLocator);
+        if (!session.isActive()) {
+            invokeEnd(rpcInfo, false);
+            throw new RpcException("[RPC客户端]初始化失败，Socket Channel未激活，请重新初始化客户端");
+        }
+
         RpcReq rpcReq = new RpcReq();
         rpcReq.setMethodLocator(methodLocator);
         // 设置参数
@@ -170,7 +174,8 @@ public class RpcServerProxy implements InvocationHandler {
 
         // 异步调用
         if (methodLocator.isAsync()) {
-            callbackEvents.put(msg.getSequence(), callback);
+            rpcInfo.setCallable(callback);
+            callbackEvents.put(msg.getSequence(), rpcInfo);
             return null;
         }
         // 同步调用
@@ -178,12 +183,14 @@ public class RpcServerProxy implements InvocationHandler {
         while (true) {
             long currentTime = System.currentTimeMillis();
             if ((currentTime - startTime) > clientConfig.getSyncTimeout()) {
+                invokeEnd(rpcInfo, false);
                 return null;
             }
             if ((rpcRsp = rspEvents.remove(msg.getSequence())) != null) {
                 if (StringUtils.isNotEmpty(rpcRsp.getException())) {
                     throw new RpcException("[RPC客户端]RPC服务端响应异常信息：" + rpcRsp.getException());
                 }
+                invokeEnd(rpcInfo, true);
                 return rpcRsp.getReturnData();
             }
         }
@@ -196,10 +203,15 @@ public class RpcServerProxy implements InvocationHandler {
      * @param rpcRsp
      */
     private <T> void checkCallback(int sequence, RpcRsp rpcRsp) {
-        RpcCallback callback = callbackEvents.get(sequence);
+        RpcInfo rpcInfo = callbackEvents.get(sequence);
+        if (rpcInfo == null) {
+            return;
+        }
+        RpcCallback callback = rpcInfo.getCallable();
         if (callback == null) {
             return;
         }
+        invokeEnd(rpcInfo, true);
         // 异步回调，使用线程池执行 runnable 接口
         String exception = rpcRsp.getException();
         callback.execute(rpcRsp.getReturnData(), StringUtils.isNotEmpty(exception) ?
@@ -258,5 +270,25 @@ public class RpcServerProxy implements InvocationHandler {
             }
         }
     }
+
+
+    private RpcInfo invokeStart(long startTime, RpcMethodLocator locator) {
+        RpcInfo rpcInfo = new RpcInfo();
+        rpcInfo.setStartTime(startTime);
+        rpcInfo.setMethodLocator(locator);
+        return rpcInfo;
+    }
+
+    private void invokeEnd(RpcInfo rpcInfo, boolean success) {
+        rpcInfo.setEndTime(System.currentTimeMillis());
+        rpcInfo.setSuccess(success);
+        // 记录，打印日志
+        RpcMethodLocator locator = rpcInfo.getMethodLocator();
+        log.info("[RPC客户端]执行结果：目标类：{}，目标方法：{}，目标方法参数：{}，是否异步：{}，是否成功，{}，消耗时间：{}ms",
+                locator.getClassName(), locator.getMethodName(), locator.getParamTypeNames(), locator.isAsync(),
+                rpcInfo.isSuccess(), rpcInfo.getEndTime() - rpcInfo.getStartTime());
+    }
+
+
 
 }

@@ -3,8 +3,7 @@ package com.herenpeng.rpc.config;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import lombok.Data;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.InputStream;
 
@@ -13,9 +12,8 @@ import java.io.InputStream;
  * @since 2023-02-09 21:51
  */
 @Data
+@Slf4j
 public class RpcConfigProcessor {
-
-    private static final Logger logger = LoggerFactory.getLogger(RpcConfigProcessor.class);
 
     private RpcConfig rpc;
 
@@ -36,7 +34,7 @@ public class RpcConfigProcessor {
             this.rpc = objectReader.readValue(yamlStream);
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error("[RPC客户端]配置解析失败，请检查rpc.yaml文件的配置格式");
+            log.error("[RPC配置]配置解析失败，请检查rpc.yaml文件的配置格式");
         }
     }
 }
