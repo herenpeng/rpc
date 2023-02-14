@@ -263,7 +263,7 @@ public class RpcServerProxy implements InvocationHandler {
             clientHeartbeatQueue.poll();
             if (clientHeartbeat == sequence) {
                 if (this.clientConfig.isHeartbeatLogEnable()) {
-                log.info("[RPC客户端]确认心跳消息，消息序列号：{}", clientHeartbeat);
+                    log.info("[RPC客户端]确认心跳消息，消息序列号：{}", clientHeartbeat);
 
                 }
                 return;
@@ -284,11 +284,10 @@ public class RpcServerProxy implements InvocationHandler {
         rpcInfo.setSuccess(success);
         // 记录，打印日志
         RpcMethodLocator locator = rpcInfo.getMethodLocator();
-        log.info("[RPC客户端]执行结果：目标类：{}，目标方法：{}，目标方法参数：{}，是否异步：{}，是否成功，{}，消耗时间：{}ms",
-                locator.getClassName(), locator.getMethodName(), locator.getParamTypeNames(), locator.isAsync(),
+        log.info("[RPC客户端]执行结果：目标：{}，是否异步：{}，是否成功，{}，消耗时间：{}ms",
+                locator.getClassName() + "#" + locator.getMethodName() + Arrays.toString(locator.getParamTypeNames()), locator.isAsync(),
                 rpcInfo.isSuccess(), rpcInfo.getEndTime() - rpcInfo.getStartTime());
     }
-
 
 
 }
