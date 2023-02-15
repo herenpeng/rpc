@@ -2,7 +2,8 @@
 
 项目地址：https://github.com/herenpeng/rpc.git
 
-- 该项目是基于Netty4的一个简易的RPC框架
+- 基于 JDK11 开发
+- 该项目是基于 Netty4 的一个简易的 RPC 框架
 - 拥有完备的服务启动、心跳监控、服务重连等机制
 - 客户端支持动态代理，调用远端服务与调用本地方法用法一致
 - 支持同步和异步两种远端调用方式，异步支持函数式回调
@@ -56,7 +57,7 @@ RPC 框架的入门，首先要使用这个 RPC 框架，搭建一个简单的 R
 
 ## 创建RPC服务端
 
-> 在项目下创建`com.herenpeng.rpc`文件包，并在该包下创建`MockRpcServer`、、`UserService`接口和`UserServiceImpl`实现类。
+> 在项目下创建`com.herenpeng.rpc`文件包，并在该包下创建`MockRpcServer`、`UserService`接口和`UserServiceImpl`实现类。
 
 ### 初始化服务端
 
