@@ -2,7 +2,28 @@
 
 项目地址：https://github.com/herenpeng/rpc.git
 
-> 该项目是基于Netty4的一个简易的RPC框架
+- 该项目是基于Netty4的一个简易的RPC框架
+- 拥有完备的服务启动、心跳监控、服务重连等机制
+- 客户端支持动态代理，调用远端服务与调用本地方法用法一致
+- 支持同步和异步两种远端调用方式，异步支持函数式回调
+- 支持自定义通信协议
+
+<p align="center">
+	<a target="_blank" href="https://www.oracle.com/java/technologies/downloads/#java11">
+		<img src="https://img.shields.io/badge/JDK-11-green.svg" alt="JDK 17" />
+	</a>
+	<br />
+	<a target="_blank" href='https://gitee.com/herenpeng/rpc'>
+		<img src='https://gitee.com/herenpeng/rpc/badge/star.svg' alt='gitee star'/>
+	</a>
+	<a target="_blank" href='https://github.com/herenpeng/rpc'>
+		<img src="https://img.shields.io/github/stars/herenpeng/rpc.svg?logo=github" alt="github star"/>
+	</a>
+</p>
+<hr/>
+
+<br/>
+
 
 ## RPC 入门
 
@@ -69,7 +90,7 @@ public interface UserService {
 
     String getUsername(String name);
 
-    String getUsername(String name, RpcCallback callback);
+    String getUsername(String name, RpcCallback<String> callback);
 
 }
 ```
@@ -89,7 +110,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String getUsername(String name, RpcCallback callback) {
+    public String getUsername(String name, RpcCallback<String> callback) {
         return getUsername(name);
     }
 
