@@ -8,7 +8,9 @@ import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.config.RpcConfigProcessor;
 import com.herenpeng.rpc.exception.RpcException;
 import com.herenpeng.rpc.kit.*;
-import com.herenpeng.rpc.proto.*;
+import com.herenpeng.rpc.proto.ProtocolDecoder;
+import com.herenpeng.rpc.proto.ProtocolEncoder;
+import com.herenpeng.rpc.proto.content.*;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -22,18 +24,12 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author herenpeng
  */
 @Slf4j
 public class RpcServerProxy implements InvocationHandler {
-
-    /**
-     * RPC 请求序列号
-     */
-    private final AtomicInteger rpcReqSequence = new AtomicInteger();
 
     private Channel session;
     private final RpcServerProxy instance;
@@ -113,16 +109,16 @@ public class RpcServerProxy implements InvocationHandler {
         // 4.设置通道
         bootstrap.channel(NioSocketChannel.class);
         // 5.添加Handler
-        bootstrap.handler(new ChannelInitializer<Channel>() {
+        bootstrap.handler(new ChannelInitializer<>() {
             @Override
             protected void initChannel(Channel channel) {
                 ChannelPipeline pipeline = channel.pipeline();
                 // 这里设置通过增加包头表示报文长度来避免粘包
                 pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(1024, 0, 2, 0, 2));
-                pipeline.addLast("decoder", new RpcDecoder());
+                pipeline.addLast("decoder", new ProtocolDecoder());
                 // 这里设置读取报文的包头长度来避免粘包
                 pipeline.addLast("frameEncoder", new LengthFieldPrepender(2));
-                pipeline.addLast("encoder", new RpcEncoder());
+                pipeline.addLast("encoder", new ProtocolEncoder());
                 pipeline.addLast("handler", new RpcClientHandler(instance));
             }
         });
@@ -168,8 +164,7 @@ public class RpcServerProxy implements InvocationHandler {
         // 设置参数
         RpcCallback callback = RpcKit.getRpcCallback(args, methodLocator.isAsync());
         rpcReq.setParams(args);
-        byte[] data = JsonUtils.toBytes(rpcReq);
-        RpcProto msg = new RpcProto(RpcProto.TYPE_REQ, rpcReqSequence.incrementAndGet(), data);
+        RpcProto msg = new RpcProto(RpcProto.TYPE_REQ, rpcReq);
         this.session.writeAndFlush(msg);
 
         // 异步调用
@@ -202,7 +197,7 @@ public class RpcServerProxy implements InvocationHandler {
      * @param sequence
      * @param rpcRsp
      */
-    private <T> void checkCallback(int sequence, RpcRsp rpcRsp) {
+    private void checkCallback(int sequence, RpcRsp rpcRsp) {
         RpcInfo rpcInfo = callbackEvents.get(sequence);
         if (rpcInfo == null) {
             return;
@@ -225,18 +220,17 @@ public class RpcServerProxy implements InvocationHandler {
         log.info("[RPC客户端]端{}服务代理初始化定时任务成功", name);
     }
 
-    private final AtomicInteger heartbeatSequence = new AtomicInteger();
     private final Queue<Integer> clientHeartbeatQueue = new ConcurrentLinkedQueue<>();
 
     private void initHeartbeat() {
         RpcScheduler.doLoopTask(() -> {
             checkHeartbeat();
-            clientHeartbeatQueue.offer(heartbeatSequence.incrementAndGet());
+            RpcProto rpcProto = new RpcProto(RpcProto.TYPE_EMPTY);
+            clientHeartbeatQueue.offer(rpcProto.getSequence());
             // 构造一个消息
-            RpcProto rpcMsg = new RpcProto(RpcProto.TYPE_EMPTY, heartbeatSequence.get());
-            this.session.writeAndFlush(rpcMsg);
+            this.session.writeAndFlush(rpcProto);
             if (this.clientConfig.isHeartbeatLogEnable()) {
-                log.info("[RPC客户端]发送心跳消息：消息序列号：{}", rpcMsg.getSequence());
+                log.info("[RPC客户端]发送心跳消息：消息序列号：{}", rpcProto.getSequence());
             }
         }, clientConfig.getHeartbeatTime(), clientConfig.getHeartbeatTime());
     }
@@ -284,9 +278,11 @@ public class RpcServerProxy implements InvocationHandler {
         rpcInfo.setSuccess(success);
         // 记录，打印日志
         RpcMethodLocator locator = rpcInfo.getMethodLocator();
-        log.info("[RPC客户端]执行结果：目标：{}，是否异步：{}，是否成功，{}，消耗时间：{}ms",
-                locator.getClassName() + "#" + locator.getMethodName() + Arrays.toString(locator.getParamTypeNames()), locator.isAsync(),
-                rpcInfo.isSuccess(), rpcInfo.getEndTime() - rpcInfo.getStartTime());
+        if (clientConfig.isMonitorLogEnable()) {
+            log.info("[RPC客户端]执行结果：目标：{}#{}{}，是否异步：{}，是否成功，{}，消耗时间：{}ms",
+                    locator.getClassName(), locator.getMethodName(), locator.getParamTypeNames(), locator.isAsync(),
+                    rpcInfo.isSuccess(), rpcInfo.getEndTime() - rpcInfo.getStartTime());
+        }
     }
 
 

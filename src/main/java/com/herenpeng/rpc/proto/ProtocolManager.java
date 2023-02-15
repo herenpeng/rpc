@@ -1,6 +1,7 @@
 package com.herenpeng.rpc.proto;
 
 import com.herenpeng.rpc.exception.RpcException;
+import com.herenpeng.rpc.proto.content.RpcProto;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

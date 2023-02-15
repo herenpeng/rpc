@@ -21,7 +21,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String getUsername(String name, RpcCallback callback) {
+    public String getUsername(String name, RpcCallback<String> callback) {
         return getUsername(name);
     }
 

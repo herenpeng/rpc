@@ -1,12 +1,16 @@
-package com.herenpeng.rpc.proto;
+package com.herenpeng.rpc.proto.content;
 
+import com.herenpeng.rpc.exception.RpcException;
+import com.herenpeng.rpc.kit.JsonUtils;
+import com.herenpeng.rpc.proto.Protocol;
+import com.herenpeng.rpc.proto.ProtocolBuilder;
+import com.herenpeng.rpc.proto.ProtocolProcessor;
 import io.netty.buffer.ByteBuf;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author herenpeng
@@ -16,6 +20,8 @@ import java.util.Objects;
 @ToString
 @EqualsAndHashCode(callSuper = false)
 public class RpcProto implements Protocol {
+
+    public static final AtomicInteger protoSequence = new AtomicInteger();
 
     /**
      * 空消息
@@ -29,6 +35,12 @@ public class RpcProto implements Protocol {
      * 响应消息
      */
     public static final byte TYPE_RSP = 2;
+
+    /**
+     * Json序列化方式
+     */
+    public static final byte SERIALIZE_JSON = 1;
+
 
     private static final ProtocolProcessor processor = new RpcProtoProcessor();
 
@@ -47,7 +59,7 @@ public class RpcProto implements Protocol {
     /**
      * 序列化方式
      */
-    private byte serialize;
+    private byte serialize = SERIALIZE_JSON;
     /**
      * 传输的消息数据
      */
@@ -57,15 +69,37 @@ public class RpcProto implements Protocol {
 
     }
 
-    public RpcProto(byte type, int sequence) {
+    public RpcProto(byte type) {
         this.type = type;
-        this.sequence = sequence;
+        this.sequence = protoSequence.incrementAndGet();
     }
 
-    public RpcProto(byte type, int sequence, byte[] data) {
+    public RpcProto(byte type, Object data) {
+        this.type = type;
+        this.sequence = protoSequence.incrementAndGet();
+        this.data = serialize(data);
+    }
+
+    public RpcProto(byte type, int sequence, Object data) {
         this.type = type;
         this.sequence = sequence;
-        this.data = data;
+        this.data = serialize(data);
+    }
+
+    // 序列化协议具体内容的数据
+    private byte[] serialize(Object data) {
+        if (this.serialize == SERIALIZE_JSON) {
+            return JsonUtils.toBytes(data);
+        }
+        throw new RpcException("[RPC协议]暂不支持该序列化方式");
+    }
+
+    // 将协议具体内容转化为具体的对象
+    public <T> T getData(Class<T> classObject) {
+        if (this.serialize == SERIALIZE_JSON) {
+            return JsonUtils.toObject(this.data, classObject);
+        }
+        throw new RpcException("[RPC协议]暂不支持该序列化方式");
     }
 
     /**

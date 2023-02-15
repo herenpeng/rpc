@@ -1,4 +1,4 @@
-package com.herenpeng.rpc.proto;
+package com.herenpeng.rpc.proto.content;
 
 import lombok.*;
 

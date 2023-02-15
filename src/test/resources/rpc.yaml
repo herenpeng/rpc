@@ -5,5 +5,6 @@ rpc:
     heartbeat-time: 10000
     heartbeat-invalid-times: 3
     heartbeat-log-enable: true
+    monitor-log-enable: true
   server:
     heartbeat-log-enable: true

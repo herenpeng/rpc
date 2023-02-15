@@ -37,7 +37,16 @@ public class RpcClientConfig extends RpcConfig {
     @JsonProperty("heartbeat-invalid-times")
     private int heartbeatInvalidTimes = 3;
 
+    /**
+     * 开启客户端心跳日志
+     */
     @JsonProperty("heartbeat-log-enable")
     private boolean heartbeatLogEnable = false;
+
+    /**
+     * 开启客户端性能监控日志
+     */
+    @JsonProperty("monitor-log-enable")
+    private boolean monitorLogEnable = false;
 
 }

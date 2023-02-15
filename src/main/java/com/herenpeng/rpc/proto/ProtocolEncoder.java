@@ -7,7 +7,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
 /**
  * @author herenpeng
  */
-public class RpcEncoder extends MessageToByteEncoder<Protocol> {
+public class ProtocolEncoder extends MessageToByteEncoder<Protocol> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, Protocol protocol, ByteBuf out) throws Exception {

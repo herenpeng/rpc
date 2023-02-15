@@ -5,8 +5,10 @@ import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.config.RpcConfigProcessor;
 import com.herenpeng.rpc.config.RpcServerConfig;
-import com.herenpeng.rpc.proto.*;
 import com.herenpeng.rpc.kit.ClassScanner;
+import com.herenpeng.rpc.proto.ProtocolDecoder;
+import com.herenpeng.rpc.proto.ProtocolEncoder;
+import com.herenpeng.rpc.proto.content.*;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -94,10 +96,10 @@ public class RpcServer {
                 ChannelPipeline pipeline = channel.pipeline();
                 // 这里设置通过增加包头表示报文长度来避免粘包
                 pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(1024, 0, 2, 0, 2));
-                pipeline.addLast("decoder", new RpcDecoder());
+                pipeline.addLast("decoder", new ProtocolDecoder());
                 // 这里设置读取报文的包头长度来避免粘包
                 pipeline.addLast("frameEncoder", new LengthFieldPrepender(2));
-                pipeline.addLast("encoder", new RpcEncoder());
+                pipeline.addLast("encoder", new ProtocolEncoder());
                 pipeline.addLast("handler", new RpcServerHandler(instance));
             }
         });
