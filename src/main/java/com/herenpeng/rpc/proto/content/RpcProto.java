@@ -143,14 +143,14 @@ public class RpcProto implements Protocol {
 
 
     @Override
-    public ProtocolBuilder newBuilder() {
+    public ProtocolBuilder builder() {
         return new Builder();
     }
 
     public static class Builder implements ProtocolBuilder {
 
         @Override
-        public Protocol builder() {
+        public Protocol build() {
             return new RpcProto();
         }
     }

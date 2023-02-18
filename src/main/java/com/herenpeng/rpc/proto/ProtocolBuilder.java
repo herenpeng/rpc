@@ -11,6 +11,6 @@ public interface ProtocolBuilder {
      *
      * @return
      */
-    Protocol builder();
+    Protocol build();
 
 }

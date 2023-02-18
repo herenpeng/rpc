@@ -1,11 +1,13 @@
 package com.herenpeng.rpc.server;
 
+import com.herenpeng.rpc.client.RpcServerProxy;
 import com.herenpeng.rpc.common.RpcMethodInvoke;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.config.RpcConfigProcessor;
 import com.herenpeng.rpc.config.RpcServerConfig;
 import com.herenpeng.rpc.kit.ClassScanner;
+import com.herenpeng.rpc.kit.thread.RpcThreadFactory;
 import com.herenpeng.rpc.proto.ProtocolDecoder;
 import com.herenpeng.rpc.proto.ProtocolEncoder;
 import com.herenpeng.rpc.proto.content.*;
@@ -83,8 +85,8 @@ public class RpcServer {
         // 1.定义服务类
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         // 2.定义执行线程组
-        EventLoopGroup bossGroup = new NioEventLoopGroup();
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        EventLoopGroup bossGroup = new NioEventLoopGroup(new RpcThreadFactory(RpcServer.class.getSimpleName() + "-boss"));
+        EventLoopGroup workerGroup = new NioEventLoopGroup(new RpcThreadFactory(RpcServer.class.getSimpleName() + "-worker"));
         // 3.设置线程池
         serverBootstrap.group(bossGroup, workerGroup);
         // 4.设置通道

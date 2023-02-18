@@ -1,11 +1,8 @@
 package com.herenpeng.rpc.common;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.herenpeng.rpc.client.RpcClient;
 import com.herenpeng.rpc.kit.RpcCallback;
 import lombok.*;
-
-import java.util.concurrent.Callable;
 
 /**
  * @author herenpeng
@@ -26,9 +23,12 @@ public class RpcInfo {
 
     private boolean success;
 
-    @JsonIgnore
-    private RpcCallback callable;
+    private Object[] params;
 
+    private Object returnData;
+
+    @JsonIgnore
+    private RpcCallback<?> callable;
 
 
 }

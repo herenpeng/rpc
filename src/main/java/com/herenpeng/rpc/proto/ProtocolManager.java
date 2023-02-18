@@ -32,7 +32,7 @@ public class ProtocolManager {
 
 
     public static Protocol getProtocol(byte version) {
-        return protocols.get(version).newBuilder().builder();
+        return protocols.get(version).builder().build();
     }
 
 

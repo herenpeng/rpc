@@ -11,7 +11,7 @@
 
 <p align="center">
 	<a target="_blank" href="https://www.oracle.com/java/technologies/downloads/#java11">
-		<img src="https://img.shields.io/badge/JDK-11-green.svg" alt="JDK 17" />
+		<img src="https://img.shields.io/badge/JDK-11-green.svg" alt="JDK 11" />
 	</a>
 	<br />
 	<a target="_blank" href='https://gitee.com/herenpeng/rpc'>
@@ -150,8 +150,6 @@ package com.herenpeng.rpc;
 
 import com.herenpeng.rpc.client.RpcClient;
 
-import static com.herenpeng.rpc.kit.RpcKit.panic;
-
 public class MockRpcClient {
 
     private static final String MockRpcServer = "MockRpcServer";
@@ -167,8 +165,7 @@ public class MockRpcClient {
         String username = userService.getUsername("肖总");
         System.out.println("同步调用：" + username);
         
-        userService.getUsername("肖总", (data, e) -> {
-            panic(e);
+        userService.getUsername("肖总", (data) -> {
             System.out.println("异步调用：" + data);
         });
     }

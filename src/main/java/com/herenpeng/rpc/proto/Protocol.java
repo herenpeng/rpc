@@ -49,5 +49,5 @@ public interface Protocol extends Serializable {
      *
      * @return
      */
-    ProtocolBuilder newBuilder();
+    ProtocolBuilder builder();
 }

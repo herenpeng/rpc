@@ -8,6 +8,8 @@ import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.config.RpcConfigProcessor;
 import com.herenpeng.rpc.exception.RpcException;
 import com.herenpeng.rpc.kit.*;
+import com.herenpeng.rpc.kit.thread.RpcScheduler;
+import com.herenpeng.rpc.kit.thread.RpcThreadFactory;
 import com.herenpeng.rpc.proto.ProtocolDecoder;
 import com.herenpeng.rpc.proto.ProtocolEncoder;
 import com.herenpeng.rpc.proto.content.*;
@@ -103,7 +105,7 @@ public class RpcServerProxy implements InvocationHandler {
         // 1.定义客户端类
         bootstrap = new Bootstrap();
         // 2.定义执行线程组
-        EventLoopGroup group = new NioEventLoopGroup();
+        EventLoopGroup group = new NioEventLoopGroup(new RpcThreadFactory(RpcServerProxy.class.getSimpleName()));
         // 3.设置线程池
         bootstrap.group(group);
         // 4.设置通道
@@ -162,11 +164,13 @@ public class RpcServerProxy implements InvocationHandler {
         RpcReq rpcReq = new RpcReq();
         rpcReq.setMethodLocator(methodLocator);
         // 设置参数
-        RpcCallback callback = RpcKit.getRpcCallback(args, methodLocator.isAsync());
+        RpcCallback<?> callback = RpcKit.getRpcCallback(args, methodLocator.isAsync());
         rpcReq.setParams(args);
         RpcProto msg = new RpcProto(RpcProto.TYPE_REQ, rpcReq);
         this.session.writeAndFlush(msg);
 
+        // 记录信息
+        rpcInfo.setParams(args);
         // 异步调用
         if (methodLocator.isAsync()) {
             rpcInfo.setCallable(callback);
@@ -183,8 +187,10 @@ public class RpcServerProxy implements InvocationHandler {
             }
             if ((rpcRsp = rspEvents.remove(msg.getSequence())) != null) {
                 if (StringUtils.isNotEmpty(rpcRsp.getException())) {
+                    invokeEnd(rpcInfo, false);
                     throw new RpcException("[RPC客户端]RPC服务端响应异常信息：" + rpcRsp.getException());
                 }
+                rpcInfo.setReturnData(rpcRsp.getReturnData());
                 invokeEnd(rpcInfo, true);
                 return rpcRsp.getReturnData();
             }
@@ -202,15 +208,18 @@ public class RpcServerProxy implements InvocationHandler {
         if (rpcInfo == null) {
             return;
         }
+        if (StringUtils.isNotEmpty(rpcRsp.getException())) {
+            invokeEnd(rpcInfo, false);
+            throw new RpcException("[RPC客户端]RPC服务端响应异常信息：" + rpcRsp.getException());
+        }
         RpcCallback callback = rpcInfo.getCallable();
         if (callback == null) {
             return;
         }
+        rpcInfo.setReturnData(rpcRsp.getReturnData());
         invokeEnd(rpcInfo, true);
         // 异步回调，使用线程池执行 runnable 接口
-        String exception = rpcRsp.getException();
-        callback.execute(rpcRsp.getReturnData(), StringUtils.isNotEmpty(exception) ?
-                new RpcException(exception) : null);
+        callback.execute(rpcRsp.getReturnData());
     }
 
 
@@ -279,9 +288,9 @@ public class RpcServerProxy implements InvocationHandler {
         // 记录，打印日志
         RpcMethodLocator locator = rpcInfo.getMethodLocator();
         if (clientConfig.isMonitorLogEnable()) {
-            log.info("[RPC客户端]执行结果：目标：{}#{}{}，是否异步：{}，是否成功，{}，消耗时间：{}ms",
+            log.info("[RPC客户端]执行结果：目标：{}#{}{}，是否异步：{}，是否成功，{}，入参：{}，出参：{}，消耗时间：{}ms",
                     locator.getClassName(), locator.getMethodName(), locator.getParamTypeNames(), locator.isAsync(),
-                    rpcInfo.isSuccess(), rpcInfo.getEndTime() - rpcInfo.getStartTime());
+                    rpcInfo.isSuccess(), rpcInfo.getParams(), rpcInfo.getReturnData(), rpcInfo.getEndTime() - rpcInfo.getStartTime());
         }
     }
 

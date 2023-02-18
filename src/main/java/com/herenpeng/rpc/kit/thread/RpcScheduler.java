@@ -1,10 +1,8 @@
-package com.herenpeng.rpc.kit;
+package com.herenpeng.rpc.kit.thread;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @author herenpeng
@@ -12,7 +10,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class RpcScheduler {
 
-    private static final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor(
+            new RpcThreadFactory(RpcScheduler.class.getSimpleName()));
 
     /**
      * @param task   定时循环任务，指定时间后执行，指定间隔时间后循环
