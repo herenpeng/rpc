@@ -15,8 +15,8 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         // 解码
         byte version = in.readByte();
-        Protocol protocol = ProtocolManager.getProtocol(version);
-        protocol.decode(in);
+        ProtocolProcessor processor = ProtocolManager.getProtocolProcessor(version);
+        Protocol protocol = processor.decode(in);
         out.add(protocol);
         in.skipBytes(in.readableBytes());
     }

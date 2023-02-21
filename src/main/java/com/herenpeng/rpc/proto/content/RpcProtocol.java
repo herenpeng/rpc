@@ -3,7 +3,6 @@ package com.herenpeng.rpc.proto.content;
 import com.herenpeng.rpc.exception.RpcException;
 import com.herenpeng.rpc.kit.JsonUtils;
 import com.herenpeng.rpc.proto.Protocol;
-import com.herenpeng.rpc.proto.ProtocolBuilder;
 import com.herenpeng.rpc.proto.ProtocolProcessor;
 import io.netty.buffer.ByteBuf;
 import lombok.Data;
@@ -15,11 +14,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author herenpeng
  * @since 2023-02-01 20:37
+ * <p>
+ * 协议内容，两个'+'之间的长度为一个字节
+ * +-------------+-------------+-------------+-------------+-------------+-------------+
+ * |   version   |    type     |                   sequence                            |
+ * +-------------+-------------+-------------+-------------+-------------+-------------+
+ * |  serialize  |                            data                                     |
+ * +-------------+-------------+-------------+-------------+-------------+-------------+
+ * |                                                                                   |
+ * +-------------+-------------+-------------+-------------+-------------+-------------+
  */
 @Data
 @ToString
 @EqualsAndHashCode(callSuper = false)
-public class RpcProto implements Protocol {
+public class RpcProtocol implements Protocol {
 
     public static final AtomicInteger protoSequence = new AtomicInteger();
 
@@ -42,7 +50,7 @@ public class RpcProto implements Protocol {
     public static final byte SERIALIZE_JSON = 1;
 
 
-    private static final ProtocolProcessor processor = new RpcProtoProcessor();
+    public static final ProtocolProcessor processor = new RpcProtocolProcessor();
 
     /**
      * 协议版本号，用于后期扩展协议，默认为1
@@ -51,7 +59,7 @@ public class RpcProto implements Protocol {
     /**
      * 消息类型
      */
-    private byte type;
+    protected byte type;
     /**
      * 序列号
      */
@@ -59,35 +67,28 @@ public class RpcProto implements Protocol {
     /**
      * 序列化方式
      */
-    private byte serialize = SERIALIZE_JSON;
+    protected byte serialize = SERIALIZE_JSON;
     /**
      * 传输的消息数据
      */
     private byte[] data;
 
-    public RpcProto() {
-
+    public RpcProtocol() {
+        this.sequence = protoSequence.incrementAndGet();
     }
 
-    public RpcProto(byte type) {
+    public RpcProtocol(byte type) {
         this.type = type;
         this.sequence = protoSequence.incrementAndGet();
     }
 
-    public RpcProto(byte type, Object data) {
-        this.type = type;
-        this.sequence = protoSequence.incrementAndGet();
-        this.data = serialize(data);
-    }
-
-    public RpcProto(byte type, int sequence, Object data) {
+    public RpcProtocol(byte type, int sequence) {
         this.type = type;
         this.sequence = sequence;
-        this.data = serialize(data);
     }
 
     // 序列化协议具体内容的数据
-    private byte[] serialize(Object data) {
+    protected byte[] encode(Object data) {
         if (this.serialize == SERIALIZE_JSON) {
             return JsonUtils.toBytes(data);
         }
@@ -95,9 +96,9 @@ public class RpcProto implements Protocol {
     }
 
     // 将协议具体内容转化为具体的对象
-    public <T> T getData(Class<T> classObject) {
+    public <T> T decode(byte[] bytes, Class<T> classObject) {
         if (this.serialize == SERIALIZE_JSON) {
-            return JsonUtils.toObject(this.data, classObject);
+            return JsonUtils.toObject(bytes, classObject);
         }
         throw new RpcException("[RPC协议]暂不支持该序列化方式");
     }
@@ -110,9 +111,6 @@ public class RpcProto implements Protocol {
         out.writeByte(type);
         out.writeInt(sequence);
         out.writeByte(serialize);
-        if (data != null && data.length > 0) {
-            out.writeBytes(data);
-        }
     }
 
     /**
@@ -120,15 +118,8 @@ public class RpcProto implements Protocol {
      */
     @Override
     public void decode(ByteBuf in) {
-        type = in.readByte();
         sequence = in.readInt();
         serialize = in.readByte();
-        // 所有数据总长度
-        int length = in.readableBytes();
-        if (length > 0) {
-            data = new byte[length];
-            in.readBytes(data);
-        }
     }
 
     @Override
@@ -139,20 +130,6 @@ public class RpcProto implements Protocol {
     @Override
     public byte getVersion() {
         return version;
-    }
-
-
-    @Override
-    public ProtocolBuilder builder() {
-        return new Builder();
-    }
-
-    public static class Builder implements ProtocolBuilder {
-
-        @Override
-        public Protocol build() {
-            return new RpcProto();
-        }
     }
 
 }

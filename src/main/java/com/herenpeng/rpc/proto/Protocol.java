@@ -43,11 +43,4 @@ public interface Protocol extends Serializable {
      * @return
      */
     ProtocolProcessor getProcessor();
-
-    /**
-     * 协议构造者方法
-     *
-     * @return
-     */
-    ProtocolBuilder builder();
 }

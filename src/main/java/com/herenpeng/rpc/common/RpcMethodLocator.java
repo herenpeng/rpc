@@ -18,10 +18,11 @@ public class RpcMethodLocator {
     private String methodName;
 
     private String[] paramTypeNames;
-
     /**
      * 异步
      */
     private boolean async;
+
+    private String path;
 
 }

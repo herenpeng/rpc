@@ -1,6 +1,7 @@
 package com.herenpeng.rpc;
 
 import com.herenpeng.rpc.annotation.RpcService;
+import com.herenpeng.rpc.bean.User;
 import com.herenpeng.rpc.kit.RpcCallback;
 
 /**
@@ -16,13 +17,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String getUsername(String name) {
-        return "RPC调用，调用参数：" + name + "，响应回调时间：" + System.currentTimeMillis();
+    public String getUsername() {
+        return "RPC的远程调用";
     }
 
     @Override
-    public String getUsername(String name, RpcCallback<String> callback) {
-        return getUsername(name);
+    public User getUserInfo(String name) {
+        return new User(15, name, true, 18, System.currentTimeMillis());
+    }
+
+    @Override
+    public User getUserInfo(String name, RpcCallback<User> callback) {
+        return getUserInfo(name);
     }
 
 }

@@ -2,6 +2,7 @@ package com.herenpeng.rpc.proto;
 
 import com.herenpeng.rpc.client.RpcServerProxy;
 import com.herenpeng.rpc.server.RpcServer;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 
 /**
@@ -9,6 +10,13 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 2023-02-06 20:35
  */
 public interface ProtocolProcessor {
+
+    /**
+     * 解码处理
+     *
+     * @return
+     */
+    Protocol decode(ByteBuf in);
 
     /**
      * 客户端受到消息的处理方法

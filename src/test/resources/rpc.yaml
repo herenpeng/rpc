@@ -1,7 +1,7 @@
 rpc:
   client:
     sync-timeout: 1000
-    reconnection-time: 3000
+    reconnection-time: 1000
     heartbeat-time: 10000
     heartbeat-invalid-times: 3
     heartbeat-log-enable: true

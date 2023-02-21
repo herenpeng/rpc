@@ -1,7 +1,7 @@
 package com.herenpeng.rpc.proto;
 
 import com.herenpeng.rpc.exception.RpcException;
-import com.herenpeng.rpc.proto.content.RpcProto;
+import com.herenpeng.rpc.proto.content.RpcProtocol;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,11 +12,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ProtocolManager {
 
-    private static final Map<Byte, Protocol> protocols = new ConcurrentHashMap<>();
+    private static final Map<Byte, ProtocolProcessor> processors = new ConcurrentHashMap<>();
 
     static {
         // 初始化该管理类的时候注册所有协议版本，这些都是内置的版本号
-        protocols.put(Protocol.VERSION_1, new RpcProto());
+        processors.put(Protocol.VERSION_1, RpcProtocol.processor);
     }
 
     /**
@@ -27,12 +27,12 @@ public class ProtocolManager {
         if (protocol == null) {
             throw new RpcException("[RPC协议]注册的RPC协议对象不能为空");
         }
-        protocols.put(protocol.getVersion(), protocol);
+        processors.put(protocol.getVersion(), protocol.getProcessor());
     }
 
 
-    public static Protocol getProtocol(byte version) {
-        return protocols.get(version).builder().build();
+    public static ProtocolProcessor getProtocolProcessor(byte version) {
+        return processors.get(version);
     }
 
 

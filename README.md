@@ -180,3 +180,12 @@ public class MockRpcClient {
 2、rpc的服务端接口必须要注解`@RpcService`，客户端接口必须要注解`@RpcApi`。
 
 3、rpc的异步调用，接口方法参数中多一个`RpcCallback`的函数式接口参数，用于处理rpc的异步回调事件，服务端该参数为`null`。
+
+
+## 未来预期功能
+
+- 基于命令式的 RPC 调用
+- 完整的 RPC 性能监控功能
+- 运行时 RPC 操作
+    - 配置查询及更新
+    - 实时性能监控

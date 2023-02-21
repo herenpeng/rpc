@@ -13,7 +13,7 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-public class RpcInfo {
+public class RpcInfo<T> {
 
     private RpcMethodLocator methodLocator;
 
@@ -28,7 +28,10 @@ public class RpcInfo {
     private Object returnData;
 
     @JsonIgnore
-    private RpcCallback<?> callable;
+    private Class<T> returnType;
+
+    @JsonIgnore
+    private RpcCallback<T> callable;
 
 
 }

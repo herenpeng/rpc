@@ -1,6 +1,7 @@
 package com.herenpeng.rpc.client;
 
 import com.herenpeng.rpc.exception.RpcException;
+import com.herenpeng.rpc.kit.RpcCallback;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Proxy;
@@ -45,6 +46,24 @@ public class RpcClient {
             map.put(targetClass.getName(), rpc);
         }
         return (T) rpc;
+    }
+
+
+    public <T> T invokeMethod(String name, String path, Class<T> returnType, Object... args) {
+        RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);
+        if (rpcServerProxy == null) {
+            throw new RpcException("[RPC客户端]服务" + name + "未注册，请先注册该服务");
+        }
+        return rpcServerProxy.invokeMethod(path, args, returnType, false, null);
+    }
+
+
+    public <T> void invokeMethod(String name, String path, Class<T> returnType, RpcCallback<T> callback, Object... args) {
+        RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);
+        if (rpcServerProxy == null) {
+            throw new RpcException("[RPC客户端]服务" + name + "未注册，请先注册该服务");
+        }
+        rpcServerProxy.invokeMethod(path, args, returnType, true, callback);
     }
 
 

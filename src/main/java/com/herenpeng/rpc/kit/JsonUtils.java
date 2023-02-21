@@ -46,4 +46,14 @@ public class JsonUtils {
         return null;
     }
 
+    public static <T> T toObject(String json, Class<T> classObject) {
+        try {
+            return objectMapper.readValue(json, classObject);
+        } catch (IOException e) {
+            log.error("[RPC工具]Json反序列化错误：{}，反序列化类型：{}", json, classObject);
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }

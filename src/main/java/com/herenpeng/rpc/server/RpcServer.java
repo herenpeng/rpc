@@ -1,6 +1,5 @@
 package com.herenpeng.rpc.server;
 
-import com.herenpeng.rpc.client.RpcServerProxy;
 import com.herenpeng.rpc.common.RpcMethodInvoke;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcConfig;
@@ -114,7 +113,7 @@ public class RpcServer {
     }
 
 
-    public void handleHeartbeat(RpcProto msg, ChannelHandlerContext ctx) {
+    public void handleHeartbeat(RpcProtocol msg, ChannelHandlerContext ctx) {
         ctx.writeAndFlush(msg);
         if (this.serverConfig.isHeartbeatLogEnable()) {
             log.info("[RPC服务端]接收心跳消息，消息序列号：{}", msg.getSequence());
@@ -122,19 +121,19 @@ public class RpcServer {
     }
 
 
-    public RpcRsp invoke(RpcReq rpcReq) {
-        if (rpcReq == null) {
+    public RpcResponse invoke(RpcRequest request) {
+        if (request == null) {
             throw new IllegalArgumentException("[RPC服务端]rpcReq不允许为null");
         }
-        RpcRsp rpcRsp = new RpcRsp();
+        RpcResponse response = new RpcResponse(request.getSequence());
         try {
-            RpcMethodLocator locator = rpcReq.getMethodLocator();
+            RpcMethodLocator locator = request.getMethodLocator();
             RpcMethodInvoke methodInvoke = cache.getMethodInvoke(locator);
             Object rpcServer = methodInvoke.getRpcServer();
             Method method = methodInvoke.getMethod();
             // 执行方法
-            Object returnData = method.invoke(rpcServer, rpcReq.getParams());
-            rpcRsp.setReturnData(returnData);
+            Object returnData = method.invoke(rpcServer, request.getParams());
+            response.setReturnData(returnData);
         } catch (Exception e) {
             log.error("[RPC服务端]服务端执行方法发生异常");
             Throwable exception = e;
@@ -142,11 +141,11 @@ public class RpcServer {
                 exception = ((InvocationTargetException) e).getTargetException();
             }
             if (exception != null) {
-                rpcRsp.setException(exception.getMessage());
+                response.setException(exception.getMessage());
                 exception.printStackTrace();
             }
         }
-        return rpcRsp;
+        return response;
     }
 
 
