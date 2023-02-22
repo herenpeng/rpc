@@ -80,18 +80,17 @@ public class MockRpcServer {
 ### 创建服务端接口及其实现类
 
 ```java
-package com.herenpeng.rpc;
-
-import com.herenpeng.rpc.annotation.RpcApi;import com.herenpeng.rpc.kit.RpcCallback;
-
 @RpcApi
 public interface UserService {
 
-    void setUsername(String name);
+    String getUsername();
 
-    String getUsername(String name);
+    User getUserInfo(String name);
 
-    String getUsername(String name, RpcCallback<String> callback);
+    /**
+     * 这个getUsername方法本质并不会真的执行，只是用来注册回调函数的一个接口方法
+     */
+    User getUserInfo(String name, RpcCallback<User> callback);
 
 }
 ```
@@ -101,18 +100,18 @@ public interface UserService {
 public class UserServiceImpl implements UserService {
 
     @Override
-    public void setUsername(String name) {
-        System.out.println("Hello,World:" + name);
+    public String getUsername() {
+        return "RPC的远程调用";
     }
 
     @Override
-    public String getUsername(String name) {
-        return "RPC调用，调用参数：" + name + "，响应回调时间：" + System.currentTimeMillis();
+    public User getUserInfo(String name) {
+        return new User(15, name, true, 18, System.currentTimeMillis());
     }
 
     @Override
-    public String getUsername(String name, RpcCallback<String> callback) {
-        return getUsername(name);
+    public User getUserInfo(String name, RpcCallback<User> callback) {
+        return getUserInfo(name);
     }
 
 }
@@ -162,10 +161,13 @@ public class MockRpcClient {
         Thread.sleep(1500);
 
         UserService userService = rpcClient.createRpc(MockRpcServer, UserService.class);
-        String username = userService.getUsername("肖总");
-        System.out.println("同步调用：" + username);
         
-        userService.getUsername("肖总", (data) -> {
+        System.out.println(userService.getUsername());
+
+        User user = userService.getUserInfo("肖总");
+        System.out.println("同步调用：" + user);
+
+        userService.getUserInfo("肖总", (data) -> {
             System.out.println("异步调用：" + data);
         });
     }

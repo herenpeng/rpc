@@ -2,6 +2,7 @@ package com.herenpeng.rpc.client;
 
 import com.herenpeng.rpc.exception.RpcException;
 import com.herenpeng.rpc.kit.RpcCallback;
+import com.herenpeng.rpc.proto.content.RpcRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Proxy;

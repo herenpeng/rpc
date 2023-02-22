@@ -1,6 +1,8 @@
 package com.herenpeng.rpc.proto.content;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.herenpeng.rpc.common.RpcMethodLocator;
+import com.herenpeng.rpc.kit.RpcCallback;
 import io.netty.buffer.ByteBuf;
 import lombok.*;
 
@@ -12,7 +14,7 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-public class RpcRequest extends RpcProtocol {
+public class RpcRequest<T> extends RpcProtocol {
 
     private RpcMethodLocator methodLocator;
 
@@ -20,22 +22,39 @@ public class RpcRequest extends RpcProtocol {
 
     private Object[] params;
 
-    public RpcRequest(byte type) {
-        super(type);
+    @JsonIgnore
+    private Class<T> returnType;
+
+    /**
+     * 用于标识请求是否异步，真正的异步判断字段
+     */
+    @JsonIgnore
+    private boolean async;
+
+    @JsonIgnore
+    private RpcCallback<T> callable;
+
+    public RpcRequest(byte subType) {
+        super(RpcProtocol.TYPE_REQUEST, subType);
     }
 
-
-    public RpcRequest(RpcMethodLocator locator, Object[] params) {
-        super(TYPE_REQ);
+    // 带方法定位符的构造，默认为消息类型
+    public RpcRequest(RpcMethodLocator locator, Object[] params, Class<T> returnType,boolean async,  RpcCallback<T> callable) {
+        super(RpcProtocol.TYPE_REQUEST, RpcProtocol.SUB_TYPE_MESSAGE);
         this.methodLocator = locator;
         this.params = params;
+        this.returnType = returnType;
+        this.async = async;
+        this.callable = callable;
     }
 
-
-    public RpcRequest(String path, Object[] params) {
-        this.type = TYPE_REQ;
+    public RpcRequest(String path, Object[] params, Class<T> returnType,boolean async,  RpcCallback<T> callable) {
+        super(RpcProtocol.TYPE_REQUEST, RpcProtocol.SUB_TYPE_MESSAGE);
         this.methodPath = path;
         this.params = params;
+        this.returnType = returnType;
+        this.async = async;
+        this.callable = callable;
     }
 
     private boolean isPath() {
@@ -47,11 +66,11 @@ public class RpcRequest extends RpcProtocol {
     public void encode(ByteBuf out) {
         super.encode(out);
         if (isPath()) {
-            byte[] methodPathBytes = encode(this.methodPath);
+            byte[] methodPathBytes = serialize(this.methodPath);
             out.writeInt(methodPathBytes.length);
             out.writeBytes(methodPathBytes);
         } else {
-            byte[] methodLocatorBytes = encode(this.methodLocator);
+            byte[] methodLocatorBytes = serialize(this.methodLocator);
             if (methodLocatorBytes == null || methodLocatorBytes.length == 0) {
                 out.writeInt(0);
             } else {
@@ -59,7 +78,7 @@ public class RpcRequest extends RpcProtocol {
                 out.writeBytes(methodLocatorBytes);
             }
         }
-        byte[] paramsBytes = encode(this.params);
+        byte[] paramsBytes = serialize(this.params);
         if (paramsBytes == null || paramsBytes.length == 0) {
             out.writeInt(0);
         } else {
@@ -76,9 +95,9 @@ public class RpcRequest extends RpcProtocol {
             byte[] bytes = new byte[length];
             in.readBytes(bytes);
             if (isPath()) {
-                this.methodPath = decode(bytes, String.class);
+                this.methodPath = deserialize(bytes, String.class);
             } else {
-                this.methodLocator = decode(bytes, RpcMethodLocator.class);
+                this.methodLocator = deserialize(bytes, RpcMethodLocator.class);
             }
         }
         // 所有数据总长度
@@ -86,7 +105,7 @@ public class RpcRequest extends RpcProtocol {
         if (length > 0) {
             byte[] bytes = new byte[length];
             in.readBytes(bytes);
-            this.params = decode(bytes, Object[].class);
+            this.params = deserialize(bytes, Object[].class);
         }
     }
 }

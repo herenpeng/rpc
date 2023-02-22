@@ -39,12 +39,12 @@ public class RpcKit {
     }
 
 
-    public static RpcCallback getRpcCallback(Object[] args, boolean async) {
+    public static RpcCallback<?> getRpcCallback(Object[] args, boolean async) {
         if (!async) {
             return null;
         }
         // 异步
-        RpcCallback callback = (RpcCallback) args[args.length - 1];
+        RpcCallback<?> callback = (RpcCallback<?>) args[args.length - 1];
         args[args.length - 1] = null;
         return callback;
     }

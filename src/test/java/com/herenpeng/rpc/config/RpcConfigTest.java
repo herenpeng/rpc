@@ -1,6 +1,7 @@
 package com.herenpeng.rpc.config;
 
-import com.herenpeng.rpc.kit.JsonUtils;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author herenpeng
@@ -8,16 +9,17 @@ import com.herenpeng.rpc.kit.JsonUtils;
  */
 public class RpcConfigTest {
 
-    public static void main(String[] args) {
+    @Test
+    public void configTest() {
         RpcConfigProcessor processor = new RpcConfigProcessor();
         RpcConfig rpc = processor.getRpc();
+        Assert.assertNotNull(rpc);
+
         RpcClientConfig client = rpc.getClient();
-        System.out.println(client);
+        Assert.assertNotNull(client);
+
         RpcServerConfig server = rpc.getServer();
-        System.out.println(server);
-
-
-        System.out.println(JsonUtils.toJson("/user/get"));
+        Assert.assertNotNull(server);
     }
 
 }

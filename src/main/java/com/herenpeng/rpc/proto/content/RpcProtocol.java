@@ -7,6 +7,7 @@ import com.herenpeng.rpc.proto.ProtocolProcessor;
 import io.netty.buffer.ByteBuf;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,38 +17,38 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 2023-02-01 20:37
  * <p>
  * 协议内容，两个'+'之间的长度为一个字节
- * +-------------+-------------+-------------+-------------+-------------+-------------+
- * |   version   |    type     |                   sequence                            |
- * +-------------+-------------+-------------+-------------+-------------+-------------+
- * |  serialize  |                            data                                     |
- * +-------------+-------------+-------------+-------------+-------------+-------------+
- * |                                                                                   |
- * +-------------+-------------+-------------+-------------+-------------+-------------+
+ * +-------------+-------------+-------------+-------------+-------------+-------------+-------------+
+ * |   version   |    type     |   subType   |     sequence                                          |
+ * +-------------+-------------+-------------+-------------+-------------+-------------+-------------+
+ * |  serialize  |                            data                                                   |
+ * +-------------+-------------+-------------+-------------+-------------+-------------+-------------+
+ * |                                                                                                 |
+ * +-------------+-------------+-------------+-------------+-------------+-------------+-------------+
  */
 @Data
 @ToString
 @EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor
 public class RpcProtocol implements Protocol {
 
-    public static final AtomicInteger protoSequence = new AtomicInteger();
+    private static final AtomicInteger protoSequence = new AtomicInteger();
+
+    public static final byte TYPE_REQUEST = 0;
+    public static final byte TYPE_RESPONSE = 1;
 
     /**
      * 空消息
      */
-    public static final byte TYPE_EMPTY = 0;
+    public static final byte SUB_TYPE_EMPTY = 0;
     /**
-     * 请求消息
+     * 消息
      */
-    public static final byte TYPE_REQ = 1;
-    /**
-     * 响应消息
-     */
-    public static final byte TYPE_RSP = 2;
+    public static final byte SUB_TYPE_MESSAGE = 1;
 
     /**
      * Json序列化方式
      */
-    public static final byte SERIALIZE_JSON = 1;
+    private static final byte SERIALIZE_JSON = 1;
 
 
     public static final ProtocolProcessor processor = new RpcProtocolProcessor();
@@ -59,7 +60,9 @@ public class RpcProtocol implements Protocol {
     /**
      * 消息类型
      */
-    protected byte type;
+    private byte type;
+
+    private byte subType;
     /**
      * 序列号
      */
@@ -67,28 +70,26 @@ public class RpcProtocol implements Protocol {
     /**
      * 序列化方式
      */
-    protected byte serialize = SERIALIZE_JSON;
+    private byte serialize = SERIALIZE_JSON;
     /**
      * 传输的消息数据
      */
     private byte[] data;
 
-    public RpcProtocol() {
+    public RpcProtocol(byte type, byte subType) {
+        this.type = type;
+        this.subType = subType;
         this.sequence = protoSequence.incrementAndGet();
     }
 
-    public RpcProtocol(byte type) {
+    public RpcProtocol(byte type, byte subType, int sequence) {
         this.type = type;
-        this.sequence = protoSequence.incrementAndGet();
-    }
-
-    public RpcProtocol(byte type, int sequence) {
-        this.type = type;
+        this.subType = subType;
         this.sequence = sequence;
     }
 
     // 序列化协议具体内容的数据
-    protected byte[] encode(Object data) {
+    protected byte[] serialize(Object data) {
         if (this.serialize == SERIALIZE_JSON) {
             return JsonUtils.toBytes(data);
         }
@@ -96,7 +97,7 @@ public class RpcProtocol implements Protocol {
     }
 
     // 将协议具体内容转化为具体的对象
-    public <T> T decode(byte[] bytes, Class<T> classObject) {
+    public <T> T deserialize(byte[] bytes, Class<T> classObject) {
         if (this.serialize == SERIALIZE_JSON) {
             return JsonUtils.toObject(bytes, classObject);
         }
@@ -109,6 +110,7 @@ public class RpcProtocol implements Protocol {
     @Override
     public void encode(ByteBuf out) {
         out.writeByte(type);
+        out.writeByte(subType);
         out.writeInt(sequence);
         out.writeByte(serialize);
     }
@@ -118,6 +120,7 @@ public class RpcProtocol implements Protocol {
      */
     @Override
     public void decode(ByteBuf in) {
+        subType = in.readByte();
         sequence = in.readInt();
         serialize = in.readByte();
     }

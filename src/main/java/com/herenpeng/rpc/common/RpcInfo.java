@@ -2,6 +2,8 @@ package com.herenpeng.rpc.common;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.herenpeng.rpc.kit.RpcCallback;
+import com.herenpeng.rpc.proto.content.RpcRequest;
+import com.herenpeng.rpc.proto.content.RpcResponse;
 import lombok.*;
 
 /**
@@ -15,23 +17,16 @@ import lombok.*;
 @AllArgsConstructor
 public class RpcInfo<T> {
 
-    private RpcMethodLocator methodLocator;
+    @NonNull
+    private RpcRequest<T> request;
+
+    private RpcResponse response;
 
     private long startTime;
 
     private long endTime;
 
     private boolean success;
-
-    private Object[] params;
-
-    private Object returnData;
-
-    @JsonIgnore
-    private Class<T> returnType;
-
-    @JsonIgnore
-    private RpcCallback<T> callable;
 
 
 }

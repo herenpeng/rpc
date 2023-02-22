@@ -1,7 +1,6 @@
 package com.herenpeng.rpc.proto.content;
 
 import com.herenpeng.rpc.client.RpcServerProxy;
-import com.herenpeng.rpc.exception.RpcException;
 import com.herenpeng.rpc.proto.Protocol;
 import com.herenpeng.rpc.proto.ProtocolProcessor;
 import com.herenpeng.rpc.server.RpcServer;
@@ -19,20 +18,7 @@ public class RpcProtocolProcessor implements ProtocolProcessor {
     @Override
     public Protocol decode(ByteBuf in) {
         int type = in.readByte();
-        Protocol protocol;
-        switch (type) {
-            case RpcProtocol.TYPE_EMPTY:
-                protocol = new RpcProtocol();
-                break;
-            case RpcProtocol.TYPE_REQ:
-                protocol = new RpcRequest(RpcProtocol.TYPE_REQ);
-                break;
-            case RpcProtocol.TYPE_RSP:
-                protocol = new RpcResponse(RpcProtocol.TYPE_RSP);
-                break;
-            default:
-                throw new RpcException("[RPC协议]错误的消息类型：" + type);
-        }
+        Protocol protocol = type == RpcProtocol.TYPE_REQUEST ? new RpcRequest() : new RpcResponse();
         protocol.decode(in);
         return protocol;
     }
@@ -42,12 +28,12 @@ public class RpcProtocolProcessor implements ProtocolProcessor {
         if (obj instanceof RpcResponse) {
             // 处理逻辑
             RpcResponse response = (RpcResponse) obj;
-            switch (response.getType()) {
-                case RpcProtocol.TYPE_EMPTY:
+            switch (response.getSubType()) {
+                case RpcProtocol.SUB_TYPE_EMPTY:
                     // 处理RPC心跳
                     rpcServerProxy.confirmHeartbeat(response.getSequence());
                     break;
-                case RpcProtocol.TYPE_RSP:
+                case RpcProtocol.SUB_TYPE_MESSAGE:
                     // 处理RPC服务端响应
                     rpcServerProxy.setRpcResponse(response.getSequence(), response);
                     break;
@@ -62,11 +48,11 @@ public class RpcProtocolProcessor implements ProtocolProcessor {
         if (obj instanceof RpcRequest) {
             // 处理逻辑
             RpcRequest request = (RpcRequest) obj;
-            switch (request.getType()) {
-                case RpcProtocol.TYPE_EMPTY:
+            switch (request.getSubType()) {
+                case RpcProtocol.SUB_TYPE_EMPTY:
                     rpcServer.handleHeartbeat(request, ctx);
                     break;
-                case RpcProtocol.TYPE_REQ:
+                case RpcProtocol.SUB_TYPE_MESSAGE:
                     log.info("[RPC服务端]接收RPC请求消息，消息序列号：{}", request.getSequence());
                     RpcResponse response = rpcServer.invoke(request);
                     ctx.writeAndFlush(response);

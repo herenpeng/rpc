@@ -19,8 +19,9 @@
         <netty-all.version>4.1.67.Final</netty-all.version>
         <slf4j-api.version>1.7.13</slf4j-api.version>
         <jackson-dataformat-yaml.version>2.13.4</jackson-dataformat-yaml.version>
-        <logback-classic.version>1.2.3</logback-classic.version>
         <lombok.version>1.18.24</lombok.version>
+        <logback-classic.version>1.2.3</logback-classic.version>
+        <junit.version>4.13.2</junit.version>
     </properties>
 
     <dependencies>
@@ -40,16 +41,22 @@
             <version>${jackson-dataformat-yaml.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback-classic.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-            <scope>compile</scope>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

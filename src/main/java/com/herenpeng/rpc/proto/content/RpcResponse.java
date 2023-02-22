@@ -19,8 +19,8 @@ public class RpcResponse extends RpcProtocol {
 
     private String exception;
 
-    public RpcResponse(int sequence) {
-        super(TYPE_RSP, sequence);
+    public RpcResponse(byte subType, int sequence) {
+        super(TYPE_RESPONSE, subType, sequence);
     }
 
 
@@ -28,7 +28,7 @@ public class RpcResponse extends RpcProtocol {
     public void encode(ByteBuf out) {
         super.encode(out);
         // 编码返回信息为字节
-        this.returnBytes = encode(this.returnData);
+        this.returnBytes = serialize(this.returnData);
         if (this.returnBytes == null || this.returnBytes.length == 0) {
             out.writeInt(0);
         } else {
@@ -36,7 +36,7 @@ public class RpcResponse extends RpcProtocol {
             out.writeBytes(this.returnBytes);
         }
         // 编码异常信息
-        byte[] exceptionBytes = encode(this.exception);
+        byte[] exceptionBytes = serialize(this.exception);
         if (exceptionBytes == null || exceptionBytes.length == 0) {
             out.writeInt(0);
         } else {
@@ -52,21 +52,20 @@ public class RpcResponse extends RpcProtocol {
         int length = in.readInt();
         if (length > 0) {
             this.returnBytes = new byte[length];
-            in.readBytes(returnBytes);
             // 解码的时候只将其解析为字节，由后续根据类型反序列化
-            // this.returnData = decode(returnBytes, Object.class);
+            in.readBytes(returnBytes);
         }
         // 所有数据总长度
         length = in.readInt();
         if (length > 0) {
             byte[] exceptionBytes = new byte[length];
             in.readBytes(exceptionBytes);
-            this.exception = decode(exceptionBytes, String.class);
+            this.exception = deserialize(exceptionBytes, String.class);
         }
     }
 
     public <T> T getReturnData(Class<T> returnType) {
-        T data = decode(returnBytes, returnType);
+        T data = deserialize(returnBytes, returnType);
         this.returnData = data;
         return data;
     }

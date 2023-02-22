@@ -43,7 +43,7 @@ public class RpcServerProxy implements InvocationHandler {
     private RpcClientConfig clientConfig;
     private RpcClientCache cache;
 
-    private final Map<Integer, RpcResponse> rspEvents = new ConcurrentHashMap<>();
+    private final Map<Integer, RpcResponse> responseEvents = new ConcurrentHashMap<>();
     /**
      * 异步请求回调事件
      */
@@ -54,7 +54,7 @@ public class RpcServerProxy implements InvocationHandler {
             // 异步事件，检查回调函数
             checkCallback(sequence, response);
         } else {
-            rspEvents.put(sequence, response);
+            responseEvents.put(sequence, response);
         }
     }
 
@@ -155,34 +155,39 @@ public class RpcServerProxy implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) {
         RpcMethodLocator methodLocator = cache.getMethodLocator(method);
         RpcCallback callback = RpcKit.getRpcCallback(args, methodLocator.isAsync());
-        return invoke(methodLocator, args, methodLocator.isAsync(), method.getReturnType(), callback);
+        return invoke(methodLocator, args, method.getReturnType(), methodLocator.isAsync(), callback);
     }
 
+    private <T> T invoke(RpcMethodLocator methodLocator, Object[] args, Class<T> returnType, boolean async, RpcCallback<T> callback) {
+        RpcRequest<T> request = new RpcRequest<>(methodLocator, args, returnType, async, callback);
+        return invoke(request);
+    }
 
     public <T> T invokeMethod(String path, Object[] args, Class<T> returnType, boolean async, RpcCallback<T> callback) {
-        RpcMethodLocator methodLocator = new RpcMethodLocator();
-        methodLocator.setPath(path);
-        return invoke(methodLocator, args, async, returnType, callback);
+        RpcRequest<T> request = new RpcRequest<>(path, args, returnType, async, callback);
+        return invoke(request);
     }
 
-
-    private <T> T invoke(RpcMethodLocator methodLocator, Object[] args, boolean async, Class<T> returnType, RpcCallback<T> callback) {
+    /**
+     * 真正执行请求的方法
+     *
+     * @param request 请求对象
+     * @param <T>     请求返回值泛型
+     * @return 返回对象
+     */
+    private <T> T invoke(RpcRequest<T> request) {
         long startTime = System.currentTimeMillis();
-        RpcInfo<T> rpcInfo = invokeStart(startTime, methodLocator);
+        RpcInfo<T> rpcInfo = invokeStart(startTime);
+        // 记录信息
+        rpcInfo.setRequest(request);
         if (!session.isActive()) {
             invokeEnd(rpcInfo, false);
             throw new RpcException("[RPC客户端]初始化失败，Socket Channel未激活，请重新初始化客户端");
         }
 
-        RpcRequest request = new RpcRequest(methodLocator, args);
         this.session.writeAndFlush(request);
-
-        // 记录信息
-        rpcInfo.setParams(args);
-        rpcInfo.setReturnType(returnType);
         // 异步调用
-        if (async) {
-            rpcInfo.setCallable(callback);
+        if (request.isAsync()) {
             callbackEvents.put(request.getSequence(), rpcInfo);
             return null;
         }
@@ -194,13 +199,14 @@ public class RpcServerProxy implements InvocationHandler {
                 invokeEnd(rpcInfo, false);
                 return null;
             }
-            if ((response = rspEvents.remove(request.getSequence())) != null) {
+            if ((response = responseEvents.remove(request.getSequence())) != null) {
+                // 记录响应数据
+                rpcInfo.setResponse(response);
                 if (StringUtils.isNotEmpty(response.getException())) {
                     invokeEnd(rpcInfo, false);
                     throw new RpcException("[RPC客户端]RPC服务端响应异常信息：" + response.getException());
                 }
-                T returnData = response.getReturnData(returnType);
-                rpcInfo.setReturnData(returnData);
+                T returnData = response.getReturnData(request.getReturnType());
                 invokeEnd(rpcInfo, true);
                 return returnData;
             }
@@ -218,16 +224,19 @@ public class RpcServerProxy implements InvocationHandler {
         if (rpcInfo == null) {
             return;
         }
+        // 记录响应数据
+        rpcInfo.setResponse(response);
         if (StringUtils.isNotEmpty(response.getException())) {
             invokeEnd(rpcInfo, false);
             throw new RpcException("[RPC客户端]RPC服务端响应异常信息：" + response.getException());
         }
-        RpcCallback<T> callback = rpcInfo.getCallable();
+        RpcRequest<T> request = rpcInfo.getRequest();
+        RpcCallback<T> callback = request.getCallable();
         if (callback == null) {
+            log.error("[RPC客户端]异步请求回调函数为空，请求序列号：{}", request.getSequence());
             return;
         }
-        T returnData = response.getReturnData(rpcInfo.getReturnType());
-        rpcInfo.setReturnData(returnData);
+        T returnData = response.getReturnData(request.getReturnType());
         invokeEnd(rpcInfo, true);
         // 异步回调，使用线程池执行 runnable 接口
         callback.execute(returnData);
@@ -242,10 +251,10 @@ public class RpcServerProxy implements InvocationHandler {
 
     private final Queue<Integer> clientHeartbeatQueue = new ConcurrentLinkedQueue<>();
 
-    private void initHeartbeat() {
+    private <T> void initHeartbeat() {
         RpcScheduler.doLoopTask(() -> {
             checkHeartbeat();
-            RpcRequest request = new RpcRequest(RpcProtocol.TYPE_EMPTY);
+            RpcRequest<T> request = new RpcRequest<>(RpcProtocol.SUB_TYPE_EMPTY);
             clientHeartbeatQueue.offer(request.getSequence());
             // 构造一个消息
             this.session.writeAndFlush(request);
@@ -286,10 +295,9 @@ public class RpcServerProxy implements InvocationHandler {
     }
 
 
-    private <T> RpcInfo<T> invokeStart(long startTime, RpcMethodLocator locator) {
+    private <T> RpcInfo<T> invokeStart(long startTime) {
         RpcInfo<T> rpcInfo = new RpcInfo<>();
         rpcInfo.setStartTime(startTime);
-        rpcInfo.setMethodLocator(locator);
         return rpcInfo;
     }
 
@@ -297,13 +305,15 @@ public class RpcServerProxy implements InvocationHandler {
         rpcInfo.setEndTime(System.currentTimeMillis());
         rpcInfo.setSuccess(success);
         // 记录，打印日志
-        RpcMethodLocator locator = rpcInfo.getMethodLocator();
+        RpcRequest<T> request = rpcInfo.getRequest();
+        RpcResponse response = rpcInfo.getResponse();
+        RpcMethodLocator locator = request.getMethodLocator();
         if (clientConfig.isMonitorLogEnable()) {
-            String target = StringUtils.isNotEmpty(locator.getPath()) ? locator.getPath() :
+            String target = StringUtils.isNotEmpty(request.getMethodPath()) ? request.getMethodPath() :
                     locator.getClassName() + "#" + locator.getMethodName() + Arrays.toString(locator.getParamTypeNames());
             log.info("[RPC客户端]执行结果：目标：{}，是否异步：{}，是否成功，{}，入参：{}，出参：{}，消耗时间：{}ms",
-                    target, locator.isAsync(), rpcInfo.isSuccess(), rpcInfo.getParams(),
-                    rpcInfo.getReturnData(), rpcInfo.getEndTime() - rpcInfo.getStartTime());
+                    target, request.isAsync(), rpcInfo.isSuccess(), request.getParams(),
+                    response == null ? null : response.getReturnData(), rpcInfo.getEndTime() - rpcInfo.getStartTime());
         }
     }
 

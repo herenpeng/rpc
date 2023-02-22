@@ -113,10 +113,11 @@ public class RpcServer {
     }
 
 
-    public void handleHeartbeat(RpcProtocol msg, ChannelHandlerContext ctx) {
-        ctx.writeAndFlush(msg);
+    public void handleHeartbeat(RpcRequest request, ChannelHandlerContext ctx) {
+        RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence());
+        ctx.writeAndFlush(response);
         if (this.serverConfig.isHeartbeatLogEnable()) {
-            log.info("[RPC服务端]接收心跳消息，消息序列号：{}", msg.getSequence());
+            log.info("[RPC服务端]接收心跳消息，消息序列号：{}", response.getSequence());
         }
     }
 
@@ -125,7 +126,7 @@ public class RpcServer {
         if (request == null) {
             throw new IllegalArgumentException("[RPC服务端]rpcReq不允许为null");
         }
-        RpcResponse response = new RpcResponse(request.getSequence());
+        RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence());
         try {
             RpcMethodLocator locator = request.getMethodLocator();
             RpcMethodInvoke methodInvoke = cache.getMethodInvoke(locator);
