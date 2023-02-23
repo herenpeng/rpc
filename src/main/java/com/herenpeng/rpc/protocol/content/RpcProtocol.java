@@ -1,9 +1,9 @@
-package com.herenpeng.rpc.proto.content;
+package com.herenpeng.rpc.protocol.content;
 
-import com.herenpeng.rpc.exception.RpcException;
-import com.herenpeng.rpc.kit.JsonUtils;
-import com.herenpeng.rpc.proto.Protocol;
-import com.herenpeng.rpc.proto.ProtocolProcessor;
+import com.herenpeng.rpc.kit.serialize.Serializer;
+import com.herenpeng.rpc.kit.serialize.SerializerManager;
+import com.herenpeng.rpc.protocol.Protocol;
+import com.herenpeng.rpc.protocol.ProtocolProcessor;
 import io.netty.buffer.ByteBuf;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -45,13 +45,9 @@ public class RpcProtocol implements Protocol {
      */
     public static final byte SUB_TYPE_MESSAGE = 1;
 
-    /**
-     * Json序列化方式
-     */
-    private static final byte SERIALIZE_JSON = 1;
-
-
     public static final ProtocolProcessor processor = new RpcProtocolProcessor();
+    // // 序列化接口，默认使用Json格式
+    // public static final Serializer serializer = new JsonSerializer();
 
     /**
      * 协议版本号，用于后期扩展协议，默认为1
@@ -70,7 +66,7 @@ public class RpcProtocol implements Protocol {
     /**
      * 序列化方式
      */
-    private byte serialize = SERIALIZE_JSON;
+    private byte serialize = Serializer.JSON;
     /**
      * 传输的消息数据
      */
@@ -86,22 +82,6 @@ public class RpcProtocol implements Protocol {
         this.type = type;
         this.subType = subType;
         this.sequence = sequence;
-    }
-
-    // 序列化协议具体内容的数据
-    protected byte[] serialize(Object data) {
-        if (this.serialize == SERIALIZE_JSON) {
-            return JsonUtils.toBytes(data);
-        }
-        throw new RpcException("[RPC协议]暂不支持该序列化方式");
-    }
-
-    // 将协议具体内容转化为具体的对象
-    public <T> T deserialize(byte[] bytes, Class<T> classObject) {
-        if (this.serialize == SERIALIZE_JSON) {
-            return JsonUtils.toObject(bytes, classObject);
-        }
-        throw new RpcException("[RPC协议]暂不支持该序列化方式");
     }
 
     /**
@@ -133,6 +113,10 @@ public class RpcProtocol implements Protocol {
     @Override
     public byte getVersion() {
         return version;
+    }
+
+    protected Serializer getSerializer() {
+        return SerializerManager.getSerializer(serialize);
     }
 
 }

@@ -1,4 +1,4 @@
-package com.herenpeng.rpc.proto;
+package com.herenpeng.rpc.protocol;
 
 import com.herenpeng.rpc.client.RpcServerProxy;
 import com.herenpeng.rpc.server.RpcServer;

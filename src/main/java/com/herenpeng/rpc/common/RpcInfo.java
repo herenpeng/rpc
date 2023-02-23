@@ -1,9 +1,7 @@
 package com.herenpeng.rpc.common;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.herenpeng.rpc.kit.RpcCallback;
-import com.herenpeng.rpc.proto.content.RpcRequest;
-import com.herenpeng.rpc.proto.content.RpcResponse;
+import com.herenpeng.rpc.protocol.content.RpcRequest;
+import com.herenpeng.rpc.protocol.content.RpcResponse;
 import lombok.*;
 
 /**

@@ -1,6 +1,6 @@
 package com.herenpeng.rpc.server;
 
-import com.herenpeng.rpc.proto.*;
+import com.herenpeng.rpc.protocol.*;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;

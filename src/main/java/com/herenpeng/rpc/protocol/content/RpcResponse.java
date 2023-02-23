@@ -1,4 +1,4 @@
-package com.herenpeng.rpc.proto.content;
+package com.herenpeng.rpc.protocol.content;
 
 import io.netty.buffer.ByteBuf;
 import lombok.*;
@@ -28,7 +28,7 @@ public class RpcResponse extends RpcProtocol {
     public void encode(ByteBuf out) {
         super.encode(out);
         // 编码返回信息为字节
-        this.returnBytes = serialize(this.returnData);
+        this.returnBytes = getSerializer().serialize(this.returnData);
         if (this.returnBytes == null || this.returnBytes.length == 0) {
             out.writeInt(0);
         } else {
@@ -36,7 +36,7 @@ public class RpcResponse extends RpcProtocol {
             out.writeBytes(this.returnBytes);
         }
         // 编码异常信息
-        byte[] exceptionBytes = serialize(this.exception);
+        byte[] exceptionBytes = getSerializer().serialize(this.exception);
         if (exceptionBytes == null || exceptionBytes.length == 0) {
             out.writeInt(0);
         } else {
@@ -60,12 +60,12 @@ public class RpcResponse extends RpcProtocol {
         if (length > 0) {
             byte[] exceptionBytes = new byte[length];
             in.readBytes(exceptionBytes);
-            this.exception = deserialize(exceptionBytes, String.class);
+            this.exception = getSerializer().deserialize(exceptionBytes, String.class);
         }
     }
 
     public <T> T getReturnData(Class<T> returnType) {
-        T data = deserialize(returnBytes, returnType);
+        T data = getSerializer().deserialize(returnBytes, returnType);
         this.returnData = data;
         return data;
     }

@@ -7,9 +7,9 @@ import com.herenpeng.rpc.config.RpcConfigProcessor;
 import com.herenpeng.rpc.config.RpcServerConfig;
 import com.herenpeng.rpc.kit.ClassScanner;
 import com.herenpeng.rpc.kit.thread.RpcThreadFactory;
-import com.herenpeng.rpc.proto.ProtocolDecoder;
-import com.herenpeng.rpc.proto.ProtocolEncoder;
-import com.herenpeng.rpc.proto.content.*;
+import com.herenpeng.rpc.protocol.ProtocolDecoder;
+import com.herenpeng.rpc.protocol.ProtocolEncoder;
+import com.herenpeng.rpc.protocol.content.*;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -43,6 +43,12 @@ public class RpcServer {
         this.instance = this;
     }
 
+    /**
+     * 使用指定的端口启动rpc服务器（优先级大于配置端口）
+     *
+     * @param port            指定的端口
+     * @param rpcScannerClass 需要扫描的Root类
+     */
     public void start(int port, Class<?> rpcScannerClass) {
         log.info("[RPC服务端]正在初始化");
         long start = System.currentTimeMillis();
@@ -50,8 +56,6 @@ public class RpcServer {
         initRpcConfig();
         // 初始化rpc缓存
         initRpcCache(rpcScannerClass);
-        // 初始化rpc接口
-        // initRpcApi(rpcScannerClass);
         // 初始化rpc服务端
         initRpcServer(port);
         long end = System.currentTimeMillis();

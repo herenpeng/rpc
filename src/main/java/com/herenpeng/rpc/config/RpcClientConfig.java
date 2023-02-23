@@ -26,7 +26,7 @@ public class RpcClientConfig extends RpcConfig {
     private long reconnectionTime = 3000;
 
     /**
-     *  默认的心跳时间，默认10000毫秒
+     * 默认的心跳时间，默认10000毫秒
      */
     @JsonProperty("heartbeat-time")
     private long heartbeatTime = 10000;

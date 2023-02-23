@@ -1,8 +1,8 @@
-package com.herenpeng.rpc.proto.content;
+package com.herenpeng.rpc.protocol.content;
 
 import com.herenpeng.rpc.client.RpcServerProxy;
-import com.herenpeng.rpc.proto.Protocol;
-import com.herenpeng.rpc.proto.ProtocolProcessor;
+import com.herenpeng.rpc.protocol.Protocol;
+import com.herenpeng.rpc.protocol.ProtocolProcessor;
 import com.herenpeng.rpc.server.RpcServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
