@@ -1,4 +1,4 @@
-package com.herenpeng.rpc;
+package com.herenpeng.rpc.service;
 
 import com.herenpeng.rpc.annotation.RpcApi;
 import com.herenpeng.rpc.bean.User;

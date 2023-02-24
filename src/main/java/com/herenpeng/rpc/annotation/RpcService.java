@@ -12,6 +12,6 @@ import java.lang.annotation.*;
 @Documented
 public @interface RpcService {
 
-    String path() default "";
+    String value() default "";
 
 }

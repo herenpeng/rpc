@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>
  * 协议内容，两个'+'之间的长度为一个字节
  * +-------------+-------------+-------------+-------------+-------------+-------------+-------------+
- * |   version   |    type     |   subType   |     sequence                                          |
+ * |   version   |    type     |   subType   |                  sequence                             |
  * +-------------+-------------+-------------+-------------+-------------+-------------+-------------+
  * |  serialize  |                            data                                                   |
  * +-------------+-------------+-------------+-------------+-------------+-------------+-------------+
@@ -46,8 +46,6 @@ public class RpcProtocol implements Protocol {
     public static final byte SUB_TYPE_MESSAGE = 1;
 
     public static final ProtocolProcessor processor = new RpcProtocolProcessor();
-    // // 序列化接口，默认使用Json格式
-    // public static final Serializer serializer = new JsonSerializer();
 
     /**
      * 协议版本号，用于后期扩展协议，默认为1

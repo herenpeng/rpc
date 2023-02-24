@@ -1,7 +1,9 @@
 package com.herenpeng.rpc;
 
+import com.herenpeng.rpc.bean.Money;
 import com.herenpeng.rpc.bean.User;
 import com.herenpeng.rpc.client.RpcClient;
+import com.herenpeng.rpc.service.UserService;
 
 /**
  * @author herenpeng
@@ -29,6 +31,9 @@ public class MockRpcClient {
             System.out.println("异步调用：" + data);
         });
 
+
+        Money money = rpcClient.invokeMethod(MockRpcServer, "/pay/get", Money.class, 1000L);
+        System.out.println("路径式同步调用：" + money);
 
     }
 

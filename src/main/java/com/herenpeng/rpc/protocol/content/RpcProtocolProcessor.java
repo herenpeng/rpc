@@ -18,7 +18,7 @@ public class RpcProtocolProcessor implements ProtocolProcessor {
     @Override
     public Protocol decode(ByteBuf in) {
         int type = in.readByte();
-        Protocol protocol = type == RpcProtocol.TYPE_REQUEST ? new RpcRequest() : new RpcResponse();
+        Protocol protocol = type == RpcProtocol.TYPE_REQUEST ? new RpcRequest<>() : new RpcResponse();
         protocol.decode(in);
         return protocol;
     }
@@ -47,7 +47,7 @@ public class RpcProtocolProcessor implements ProtocolProcessor {
     public void handleServer(RpcServer rpcServer, ChannelHandlerContext ctx, Object obj) {
         if (obj instanceof RpcRequest) {
             // 处理逻辑
-            RpcRequest request = (RpcRequest) obj;
+            RpcRequest<?> request = (RpcRequest<?>) obj;
             switch (request.getSubType()) {
                 case RpcProtocol.SUB_TYPE_EMPTY:
                     rpcServer.handleHeartbeat(request, ctx);

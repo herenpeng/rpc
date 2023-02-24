@@ -6,6 +6,7 @@ import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.config.RpcConfigProcessor;
 import com.herenpeng.rpc.config.RpcServerConfig;
 import com.herenpeng.rpc.kit.ClassScanner;
+import com.herenpeng.rpc.kit.StringUtils;
 import com.herenpeng.rpc.kit.thread.RpcThreadFactory;
 import com.herenpeng.rpc.protocol.ProtocolDecoder;
 import com.herenpeng.rpc.protocol.ProtocolEncoder;
@@ -117,7 +118,7 @@ public class RpcServer {
     }
 
 
-    public void handleHeartbeat(RpcRequest request, ChannelHandlerContext ctx) {
+    public void handleHeartbeat(RpcRequest<?> request, ChannelHandlerContext ctx) {
         RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence());
         ctx.writeAndFlush(response);
         if (this.serverConfig.isHeartbeatLogEnable()) {
@@ -126,14 +127,13 @@ public class RpcServer {
     }
 
 
-    public RpcResponse invoke(RpcRequest request) {
+    public RpcResponse invoke(RpcRequest<?> request) {
         if (request == null) {
             throw new IllegalArgumentException("[RPC服务端]rpcReq不允许为null");
         }
         RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence());
         try {
-            RpcMethodLocator locator = request.getMethodLocator();
-            RpcMethodInvoke methodInvoke = cache.getMethodInvoke(locator);
+            RpcMethodInvoke methodInvoke = getRpcMethodInvoke(request);
             Object rpcServer = methodInvoke.getRpcServer();
             Method method = methodInvoke.getMethod();
             // 执行方法
@@ -151,6 +151,16 @@ public class RpcServer {
             }
         }
         return response;
+    }
+
+
+    private RpcMethodInvoke getRpcMethodInvoke(RpcRequest<?> request) {
+        if (StringUtils.isNotEmpty(request.getMethodPath())) {
+            String path = request.getMethodPath();
+            return cache.getMethodInvoke(path);
+        }
+        RpcMethodLocator locator = request.getMethodLocator();
+        return cache.getMethodInvoke(locator);
     }
 
 

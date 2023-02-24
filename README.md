@@ -186,7 +186,6 @@ public class MockRpcClient {
 
 ## 未来预期功能
 
-- 基于命令式的 RPC 调用
 - 完整的 RPC 性能监控功能
 - 运行时 RPC 操作
     - 配置查询及更新

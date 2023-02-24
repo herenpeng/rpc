@@ -2,7 +2,9 @@ package com.herenpeng.rpc.protocol.content;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.herenpeng.rpc.common.RpcMethodLocator;
+import com.herenpeng.rpc.kit.BitKit;
 import com.herenpeng.rpc.kit.RpcCallback;
+import com.herenpeng.rpc.kit.StringUtils;
 import io.netty.buffer.ByteBuf;
 import lombok.*;
 
@@ -15,6 +17,16 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RpcRequest<T> extends RpcProtocol {
+
+    /**
+     * 第一位bit位，标识使用的是路径方式
+     */
+    public static final byte STATUS_METHOD_PATH = 1;
+
+    /**
+     * 标识位，用来表示一些状态
+     */
+    protected byte status;
 
     private RpcMethodLocator methodLocator;
 
@@ -34,6 +46,7 @@ public class RpcRequest<T> extends RpcProtocol {
     @JsonIgnore
     private RpcCallback<T> callable;
 
+
     public RpcRequest(byte subType) {
         super(RpcProtocol.TYPE_REQUEST, subType);
     }
@@ -50,6 +63,7 @@ public class RpcRequest<T> extends RpcProtocol {
 
     public RpcRequest(String path, Object[] params, Class<T> returnType, boolean async, RpcCallback<T> callable) {
         super(RpcProtocol.TYPE_REQUEST, RpcProtocol.SUB_TYPE_MESSAGE);
+        this.status = (byte) BitKit.setBit(this.status, STATUS_METHOD_PATH);
         this.methodPath = path;
         this.params = params;
         this.returnType = returnType;
@@ -58,13 +72,14 @@ public class RpcRequest<T> extends RpcProtocol {
     }
 
     private boolean isPath() {
-        return false;
+        return BitKit.getBit(this.status, STATUS_METHOD_PATH) == 1;
     }
 
 
     @Override
     public void encode(ByteBuf out) {
         super.encode(out);
+        out.writeByte(this.status);
         if (isPath()) {
             byte[] methodPathBytes = getSerializer().serialize(this.methodPath);
             out.writeInt(methodPathBytes.length);
@@ -90,6 +105,7 @@ public class RpcRequest<T> extends RpcProtocol {
     @Override
     public void decode(ByteBuf in) {
         super.decode(in);
+        this.status = in.readByte();
         int length = in.readInt();
         if (length > 0) {
             byte[] bytes = new byte[length];
