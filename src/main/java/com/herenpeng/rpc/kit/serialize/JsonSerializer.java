@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 
 /**
  * @author herenpeng
@@ -13,7 +14,13 @@ import java.io.IOException;
 @Slf4j
 public class JsonSerializer implements Serializer {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    public JsonSerializer() {
+        objectMapper = new ObjectMapper();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        objectMapper.setDateFormat(format);
+    }
 
     @Override
     public byte getId() {

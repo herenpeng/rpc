@@ -1,8 +1,10 @@
 package com.herenpeng.rpc.bean;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author herenpeng
@@ -15,10 +17,13 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class User implements Serializable {
 
-    private Integer userId;
+    private Integer id;
     private String username;
     private Boolean gender;
     private Integer age;
-    private Long time;
+
+    private Date birthDate;
+    private Date createDate;
+    private Date updateDate;
 
 }

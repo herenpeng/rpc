@@ -116,7 +116,7 @@ public class RpcServerProxy implements InvocationHandler {
             protected void initChannel(Channel channel) {
                 ChannelPipeline pipeline = channel.pipeline();
                 // 这里设置通过增加包头表示报文长度来避免粘包
-                pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(1024, 0, 2, 0, 2));
+                pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(1024 * 1024, 0, 2, 0, 2));
                 pipeline.addLast("decoder", new ProtocolDecoder());
                 // 这里设置读取报文的包头长度来避免粘包
                 pipeline.addLast("frameEncoder", new LengthFieldPrepender(2));

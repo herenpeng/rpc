@@ -1,8 +1,10 @@
 package com.herenpeng.rpc.bean;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author herenpeng
@@ -13,9 +15,11 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Money implements Serializable {
+public class Department implements Serializable {
 
-    private User user;
-    private long account;
+    private Integer id;
+    private String name;
+    private Date createDate;
+    private Date updateDate;
 
 }

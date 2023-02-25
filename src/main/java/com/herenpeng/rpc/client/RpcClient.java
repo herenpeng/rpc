@@ -49,7 +49,7 @@ public class RpcClient {
     }
 
 
-    public <T> T invokeMethod(String name, String path, Class<T> returnType, Object... args) {
+    public <T> T get(String name, String path, Class<T> returnType, Object... args) {
         RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);
         if (rpcServerProxy == null) {
             throw new RpcException("[RPC客户端]服务" + name + "未注册，请先注册该服务");
@@ -58,7 +58,7 @@ public class RpcClient {
     }
 
 
-    public <T> void invokeMethod(String name, String path, Class<T> returnType, RpcCallback<T> callback, Object... args) {
+    public <T> void get(String name, String path, Class<T> returnType, RpcCallback<T> callback, Object... args) {
         RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);
         if (rpcServerProxy == null) {
             throw new RpcException("[RPC客户端]服务" + name + "未注册，请先注册该服务");

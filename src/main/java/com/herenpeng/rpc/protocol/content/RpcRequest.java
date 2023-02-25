@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.kit.BitKit;
 import com.herenpeng.rpc.kit.RpcCallback;
-import com.herenpeng.rpc.kit.StringUtils;
 import io.netty.buffer.ByteBuf;
 import lombok.*;
 

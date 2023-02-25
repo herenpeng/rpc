@@ -6,6 +6,7 @@ import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.config.RpcConfigProcessor;
 import com.herenpeng.rpc.config.RpcServerConfig;
 import com.herenpeng.rpc.kit.ClassScanner;
+import com.herenpeng.rpc.kit.Collections;
 import com.herenpeng.rpc.kit.StringUtils;
 import com.herenpeng.rpc.kit.thread.RpcThreadFactory;
 import com.herenpeng.rpc.protocol.ProtocolDecoder;
@@ -23,7 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author herenpeng
@@ -101,7 +105,7 @@ public class RpcServer {
             public void initChannel(SocketChannel channel) {
                 ChannelPipeline pipeline = channel.pipeline();
                 // 这里设置通过增加包头表示报文长度来避免粘包
-                pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(1024, 0, 2, 0, 2));
+                pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(1024 * 1024, 0, 2, 0, 2));
                 pipeline.addLast("decoder", new ProtocolDecoder());
                 // 这里设置读取报文的包头长度来避免粘包
                 pipeline.addLast("frameEncoder", new LengthFieldPrepender(2));
@@ -129,18 +133,23 @@ public class RpcServer {
 
     public RpcResponse invoke(RpcRequest<?> request) {
         if (request == null) {
-            throw new IllegalArgumentException("[RPC服务端]rpcReq不允许为null");
+            throw new IllegalArgumentException("[RPC服务端]request不允许为null");
         }
         RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence());
         try {
             RpcMethodInvoke methodInvoke = getRpcMethodInvoke(request);
             Object rpcServer = methodInvoke.getRpcServer();
             Method method = methodInvoke.getMethod();
+            Object returnData;
             // 执行方法
-            Object returnData = method.invoke(rpcServer, request.getParams());
+            if (Collections.isEmpty(request.getParams())) {
+                returnData = method.invoke(rpcServer);
+            } else {
+                returnData = method.invoke(rpcServer, request.getParams());
+            }
             response.setReturnData(returnData);
         } catch (Exception e) {
-            log.error("[RPC服务端]服务端执行方法发生异常");
+            log.error("[RPC服务端]服务端执行方法发生异常：{}", request);
             Throwable exception = e;
             if (e instanceof InvocationTargetException) {
                 exception = ((InvocationTargetException) e).getTargetException();
