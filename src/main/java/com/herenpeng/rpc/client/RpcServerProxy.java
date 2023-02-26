@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -155,10 +156,10 @@ public class RpcServerProxy implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) {
         RpcMethodLocator methodLocator = cache.getMethodLocator(method);
         RpcCallback callback = RpcKit.getRpcCallback(args, methodLocator.isAsync());
-        return invoke(methodLocator, args, method.getReturnType(), methodLocator.isAsync(), callback);
+        return invoke(methodLocator, args, method.getGenericReturnType(), methodLocator.isAsync(), callback);
     }
 
-    private <T> T invoke(RpcMethodLocator methodLocator, Object[] args, Class<T> returnType, boolean async, RpcCallback<T> callback) {
+    private <T> T invoke(RpcMethodLocator methodLocator, Object[] args, Type returnType, boolean async, RpcCallback<T> callback) {
         RpcRequest<T> request = new RpcRequest<>(methodLocator, args, returnType, async, callback);
         return invoke(request);
     }

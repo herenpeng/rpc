@@ -7,6 +7,8 @@ import com.herenpeng.rpc.kit.RpcCallback;
 import io.netty.buffer.ByteBuf;
 import lombok.*;
 
+import java.lang.reflect.Type;
+
 /**
  * @author herenpeng
  */
@@ -34,7 +36,7 @@ public class RpcRequest<T> extends RpcProtocol {
     private Object[] params;
 
     @JsonIgnore
-    private Class<T> returnType;
+    private Type returnType;
 
     /**
      * 用于标识请求是否异步，真正的异步判断字段
@@ -51,7 +53,7 @@ public class RpcRequest<T> extends RpcProtocol {
     }
 
     // 带方法定位符的构造，默认为消息类型
-    public RpcRequest(RpcMethodLocator locator, Object[] params, Class<T> returnType, boolean async, RpcCallback<T> callable) {
+    public RpcRequest(RpcMethodLocator locator, Object[] params, Type returnType, boolean async, RpcCallback<T> callable) {
         super(RpcProtocol.TYPE_REQUEST, RpcProtocol.SUB_TYPE_MESSAGE);
         this.methodLocator = locator;
         this.params = params;

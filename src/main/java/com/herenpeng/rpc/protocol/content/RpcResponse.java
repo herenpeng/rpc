@@ -3,6 +3,8 @@ package com.herenpeng.rpc.protocol.content;
 import io.netty.buffer.ByteBuf;
 import lombok.*;
 
+import java.lang.reflect.Type;
+
 /**
  * @author herenpeng
  */
@@ -64,8 +66,8 @@ public class RpcResponse extends RpcProtocol {
         }
     }
 
-    public <T> T getReturnData(Class<T> returnType) {
-        T data = getSerializer().deserialize(returnBytes, returnType);
+    public <T> T getReturnData(Type valueType) {
+        T data = getSerializer().deserialize(returnBytes, valueType);
         this.returnData = data;
         return data;
     }

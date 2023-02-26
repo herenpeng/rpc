@@ -34,6 +34,9 @@ public class MockRpcClient {
 
         List<User> userList = userService.getUserList();
         System.err.println("同步调用3 =====> " + userList);
+        for (User u : userList) {
+            System.out.println(u.getUsername());
+        }
         userService.getUserList((data) -> {
             System.err.println("异步调用4 =====> " + data);
         });
