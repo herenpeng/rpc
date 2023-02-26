@@ -155,16 +155,12 @@ public class RpcServerProxy implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
         RpcMethodLocator methodLocator = cache.getMethodLocator(method);
-        RpcCallback callback = RpcKit.getRpcCallback(args, methodLocator.isAsync());
-        return invoke(methodLocator, args, method.getGenericReturnType(), methodLocator.isAsync(), callback);
-    }
-
-    private <T> T invoke(RpcMethodLocator methodLocator, Object[] args, Type returnType, boolean async, RpcCallback<T> callback) {
-        RpcRequest<T> request = new RpcRequest<>(methodLocator, args, returnType, async, callback);
+        RpcCallback<?> callback = RpcKit.getRpcCallback(args, methodLocator.isAsync());
+        RpcRequest<?> request = new RpcRequest<>(methodLocator, args, method.getGenericReturnType(), methodLocator.isAsync(), callback);
         return invoke(request);
     }
 
-    public <T> T invokeMethod(String path, Object[] args, Class<T> returnType, boolean async, RpcCallback<T> callback) {
+    public <T> T invokeMethod(String path, Object[] args, Type returnType, boolean async, RpcCallback<T> callback) {
         RpcRequest<T> request = new RpcRequest<>(path, args, returnType, async, callback);
         return invoke(request);
     }

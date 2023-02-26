@@ -4,6 +4,7 @@ target/
 .git
 *.iml
 .idea
+.vscode
 .classpath
 .project
 .settings

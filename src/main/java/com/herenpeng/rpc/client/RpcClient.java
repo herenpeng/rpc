@@ -2,9 +2,11 @@ package com.herenpeng.rpc.client;
 
 import com.herenpeng.rpc.exception.RpcException;
 import com.herenpeng.rpc.kit.RpcCallback;
+import com.herenpeng.rpc.kit.ValueType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -48,8 +50,15 @@ public class RpcClient {
         return (T) rpc;
     }
 
+    public <T> T get(String name, String path, ValueType<T> returnType, Object... args) {
+        RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);
+        if (rpcServerProxy == null) {
+            throw new RpcException("[RPC客户端]服务" + name + "未注册，请先注册该服务");
+        }
+        return rpcServerProxy.invokeMethod(path, args, returnType.get(), false, null);
+    }
 
-    public <T> T get(String name, String path, Class<T> returnType, Object... args) {
+    public <T> T get(String name, String path, Type returnType, Object... args) {
         RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);
         if (rpcServerProxy == null) {
             throw new RpcException("[RPC客户端]服务" + name + "未注册，请先注册该服务");
@@ -57,6 +66,13 @@ public class RpcClient {
         return rpcServerProxy.invokeMethod(path, args, returnType, false, null);
     }
 
+    public <T> void get(String name, String path, ValueType<T> returnType, RpcCallback<T> callback, Object... args) {
+        RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);
+        if (rpcServerProxy == null) {
+            throw new RpcException("[RPC客户端]服务" + name + "未注册，请先注册该服务");
+        }
+        rpcServerProxy.invokeMethod(path, args, returnType.get(), true, callback);
+    }
 
     public <T> void get(String name, String path, Class<T> returnType, RpcCallback<T> callback, Object... args) {
         RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);

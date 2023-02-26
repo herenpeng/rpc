@@ -3,6 +3,7 @@ package com.herenpeng.rpc;
 import com.herenpeng.rpc.bean.Department;
 import com.herenpeng.rpc.bean.User;
 import com.herenpeng.rpc.client.RpcClient;
+import com.herenpeng.rpc.kit.ValueType;
 import com.herenpeng.rpc.service.UserService;
 
 import java.util.Arrays;
@@ -56,6 +57,15 @@ public class MockRpcClient {
 
         rpcClient.get(MockRpcServer, "/department/list", Department[].class, (list) -> {
             System.err.println("路径式异步调用8 =====> " + Arrays.toString(list));
+        });
+
+
+        rpcClient.get(MockRpcServer, "/department/list", new ValueType<List<Department>>() {
+        }, (list) -> {
+            System.err.println("路径式异步调用9 =====> ");
+            for (Department department1 : list) {
+                System.out.println(department1.getId() + "---" + department1.getName());
+            }
         });
 
     }

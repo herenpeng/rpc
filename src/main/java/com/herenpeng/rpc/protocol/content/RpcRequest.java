@@ -62,7 +62,7 @@ public class RpcRequest<T> extends RpcProtocol {
         this.callable = callable;
     }
 
-    public RpcRequest(String path, Object[] params, Class<T> returnType, boolean async, RpcCallback<T> callable) {
+    public RpcRequest(String path, Object[] params, Type returnType, boolean async, RpcCallback<T> callable) {
         super(RpcProtocol.TYPE_REQUEST, RpcProtocol.SUB_TYPE_MESSAGE);
         this.status = (byte) BitKit.setBit(this.status, STATUS_METHOD_PATH);
         this.methodPath = path;
