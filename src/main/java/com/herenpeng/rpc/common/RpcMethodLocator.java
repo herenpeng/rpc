@@ -17,6 +17,9 @@ public class RpcMethodLocator {
 
     private String methodName;
 
+    /**
+     * 最后一个参数如果为rpc回调（async值为true），则会删掉最后一个参数
+     */
     private String[] paramTypeNames;
     /**
      * 异步方法标识

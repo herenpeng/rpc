@@ -62,6 +62,4 @@ public class UserServiceImpl implements UserService {
         list.add(new User(21, "小周6", false, 35, new Date(), new Date(), new Date()));
         return list;
     }
-
-
 }

@@ -83,15 +83,17 @@ public class MockRpcServer {
 @RpcApi
 public interface UserService {
 
-    String getUsername();
-
     User getUserInfo(String name);
 
-    /**
-     * 这个getUsername方法本质并不会真的执行，只是用来注册回调函数的一个接口方法
-     */
     User getUserInfo(String name, RpcCallback<User> callback);
 
+    List<User> getUserList();
+
+    List<User> getUserList(RpcCallback<List<User>> callback);
+
+    User updateUser(User user);
+
+    List<User> updateUsers(List<User> users);
 }
 ```
 
@@ -100,13 +102,8 @@ public interface UserService {
 public class UserServiceImpl implements UserService {
 
     @Override
-    public String getUsername() {
-        return "RPC的远程调用";
-    }
-
-    @Override
     public User getUserInfo(String name) {
-        return new User(15, name, true, 18, System.currentTimeMillis());
+        return new User(15, name, true, 18, new Date(), new Date(), new Date());
     }
 
     @Override
@@ -114,6 +111,42 @@ public class UserServiceImpl implements UserService {
         return getUserInfo(name);
     }
 
+    @Override
+    public List<User> getUserList() {
+        List<User> list = new ArrayList<>();
+        list.add(new User(15, "小明", true, 18, new Date(), new Date(), new Date()));
+        list.add(new User(16, "小红", false, 21, new Date(), new Date(), new Date()));
+        list.add(new User(17, "小雷", true, 25, new Date(), new Date(), new Date()));
+        list.add(new User(18, "小刚", true, 29, new Date(), new Date(), new Date()));
+        list.add(new User(19, "小李", true, 42, new Date(), new Date(), new Date()));
+        list.add(new User(20, "小王", false, 28, new Date(), new Date(), new Date()));
+        list.add(new User(21, "小周", false, 35, new Date(), new Date(), new Date()));
+        return list;
+    }
+
+    @Override
+    public List<User> getUserList(RpcCallback<List<User>> callback) {
+        return getUserList();
+    }
+
+    @Override
+    public User updateUser(User user) {
+        user.setUsername("修改后的用户名");
+        return user;
+    }
+
+    @Override
+    public List<User> updateUsers(List<User> users) {
+        List<User> list = new ArrayList<>();
+        list.add(new User(15, "小明2", true, 18, new Date(), new Date(), new Date()));
+        list.add(new User(16, "小红2", false, 21, new Date(), new Date(), new Date()));
+        list.add(new User(17, "小雷2", true, 25, new Date(), new Date(), new Date()));
+        list.add(new User(18, "小刚3", true, 29, new Date(), new Date(), new Date()));
+        list.add(new User(19, "小李4", true, 42, new Date(), new Date(), new Date()));
+        list.add(new User(20, "小王5", false, 28, new Date(), new Date(), new Date()));
+        list.add(new User(21, "小周6", false, 35, new Date(), new Date(), new Date()));
+        return list;
+    }
 }
 ```
 
@@ -145,10 +178,6 @@ public class MockRpcClient {
 > 先启动`MockRpcServer`类，然后启动`MockRpcClient`类。
 
 ```java
-package com.herenpeng.rpc;
-
-import com.herenpeng.rpc.client.RpcClient;
-
 public class MockRpcClient {
 
     private static final String MockRpcServer = "MockRpcServer";
@@ -161,14 +190,146 @@ public class MockRpcClient {
         Thread.sleep(1500);
 
         UserService userService = rpcClient.createRpc(MockRpcServer, UserService.class);
-        
-        System.out.println(userService.getUsername());
 
+        // 服务代理调用，返回 User 对象
+        rpcServerProxyReturnUser(userService);
+
+        // 服务代理调用，返回 List<User> 对象
+        rpcServerProxyReturnUserList(userService);
+
+        // 服务代理调用，传递参数是 User 对象
+        rpcServerProxyParamUser(userService);
+
+        // 服务代理调用，传递参数是 List<User> 对象
+        rpcServerProxyParamUserList(userService);
+    }
+
+
+    private static void rpcServerProxyReturnUser(UserService userService) {
         User user = userService.getUserInfo("肖总");
-        System.out.println("同步调用：" + user);
+        System.err.println("同步调用1 =====> " + user);
 
         userService.getUserInfo("肖总", (data) -> {
-            System.out.println("异步调用：" + data);
+            System.err.println("异步调用2 =====> " + data);
+        });
+    }
+
+
+    private static void rpcServerProxyReturnUserList(UserService userService) {
+        List<User> userList = userService.getUserList();
+        for (User user : userList) {
+            System.err.println("同步调用3 =====> " + user.getUsername());
+        }
+        userService.getUserList((data) -> {
+            for (User user : data) {
+                System.err.println("异步调用4 =====> " + user.getUsername());
+            }
+        });
+    }
+
+
+    public static void rpcServerProxyParamUser(UserService userService) {
+        User user = userService.updateUser(new User(21, "小周", false, 35, new Date(), new Date(), new Date()));
+        System.err.println("同步调用10 =====> " + user);
+    }
+
+
+    public static void rpcServerProxyParamUserList(UserService userService) {
+        List<User> list = new ArrayList<>();
+        list.add(new User(15, "小明", true, 18, new Date(), new Date(), new Date()));
+        list.add(new User(16, "小红", false, 21, new Date(), new Date(), new Date()));
+        list.add(new User(17, "小雷", true, 25, new Date(), new Date(), new Date()));
+        list.add(new User(18, "小刚", true, 29, new Date(), new Date(), new Date()));
+        list.add(new User(19, "小李", true, 42, new Date(), new Date(), new Date()));
+        list.add(new User(20, "小王", false, 28, new Date(), new Date(), new Date()));
+        list.add(new User(21, "小周", false, 35, new Date(), new Date(), new Date()));
+        List<User> userList = userService.updateUsers(list);
+        for (User user : userList) {
+            System.err.println("同步调用11 =====> " + user.getId() + " --- " + user.getUsername());
+        }
+    }
+}
+```
+
+## RPC 路径式调用
+
+### 创建创建服务端
+```java
+@RpcService("department")
+public class DepartmentService {
+
+    @RpcMethod("get")
+    public Department get(String name) {
+        return new Department(1, name, new Date(), new Date());
+    }
+
+    @RpcMethod("list")
+    public List<Department> list() {
+        List<Department> list = new ArrayList<>();
+        list.add(new Department(1, "行政部", new Date(), new Date()));
+        list.add(new Department(2, "财务部", new Date(), new Date()));
+        list.add(new Department(3, "技术部", new Date(), new Date()));
+        list.add(new Department(4, "人事部", new Date(), new Date()));
+        list.add(new Department(5, "运营部", new Date(), new Date()));
+        list.add(new Department(6, "公关部", new Date(), new Date()));
+        return list;
+    }
+}
+```
+
+### RPC客户端调用
+```java
+public class MockRpcClient {
+
+    private static final String MockRpcServer = "MockRpcServer";
+
+    public static void main(String[] args) throws InterruptedException {
+        // 创建客户端并调用方法
+        RpcClient rpcClient = new RpcClient();
+        rpcClient.register(MockRpcServer, "127.0.0.1", 10000, MockRpcClient.class);
+
+        Thread.sleep(1500);
+
+        // 路径调用，返回 Department 对象
+        rpcPathReturnDepartment(rpcClient);
+
+        // 路径调用，返回 Department[] 数组对象
+        rpcPathReturnDepartmentArray(rpcClient);
+
+        // 路径调用，返回 List<Department> 集合对象
+        rpcPathReturnDepartmentList(rpcClient);
+    }
+
+    private static void rpcPathReturnDepartment(RpcClient rpcClient) {
+        Department department = rpcClient.get(MockRpcServer, "/department/get", Department.class, "技术部");
+        System.err.println("路径式同步调用5 =====> " + department);
+
+        rpcClient.get(MockRpcServer, "/department/get", Department.class, (data) -> {
+            System.err.println("路径式异步调用6 =====> " + data);
+        }, "技术部");
+    }
+
+
+    private static void rpcPathReturnDepartmentArray(RpcClient rpcClient) {
+        Department[] departmentList = rpcClient.get(MockRpcServer, "/department/list", Department[].class);
+        for (Department dept : departmentList) {
+            System.err.println("路径式同步调用7 =====> " + dept.getId() + "---" + dept.getName());
+        }
+
+        rpcClient.get(MockRpcServer, "/department/list", Department[].class, (list) -> {
+            for (Department department : list) {
+                System.err.println("路径式异步调用8 =====> " + department.getId() + "---" + department.getName());
+            }
+        });
+    }
+
+
+    private static void rpcPathReturnDepartmentList(RpcClient rpcClient) {
+        rpcClient.get(MockRpcServer, "/department/list", new ValueType<List<Department>>() {
+        }, (list) -> {
+            for (Department department : list) {
+                System.err.println("路径式异步调用9 =====> " + department.getId() + "---" + department.getName());
+            }
         });
     }
 

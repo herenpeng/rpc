@@ -33,8 +33,13 @@ public class RpcRequest<T> extends RpcProtocol {
 
     private String methodPath;
 
+    /**
+     * 全部参数，如果最后一个参数为rpc回调，则置为null值
+     */
     private Object[] params;
-
+    /**
+     * 全部参数对应的字节数组数据
+     */
     private byte[][] paramsBytes;
 
     @JsonIgnore
@@ -54,7 +59,15 @@ public class RpcRequest<T> extends RpcProtocol {
         super(RpcProtocol.TYPE_REQUEST, subType);
     }
 
-    // 带方法定位符的构造，默认为消息类型
+    /**
+     * 带方法定位符的构造，默认为消息类型
+     *
+     * @param locator    请求方法定位符号对象
+     * @param params     请求参数
+     * @param returnType 返回类型
+     * @param async      是否异步
+     * @param callable   回调函数，同步为null
+     */
     public RpcRequest(RpcMethodLocator locator, Object[] params, Type returnType, boolean async, RpcCallback<T> callable) {
         super(RpcProtocol.TYPE_REQUEST, RpcProtocol.SUB_TYPE_MESSAGE);
         this.methodLocator = locator;
@@ -64,6 +77,15 @@ public class RpcRequest<T> extends RpcProtocol {
         this.callable = callable;
     }
 
+    /**
+     * 带请求路径的构造，默认为消息类型
+     *
+     * @param path       请求路径
+     * @param params     请求参数
+     * @param returnType 返回类型
+     * @param async      是否异步
+     * @param callable   回调函数，同步为null
+     */
     public RpcRequest(String path, Object[] params, Type returnType, boolean async, RpcCallback<T> callable) {
         super(RpcProtocol.TYPE_REQUEST, RpcProtocol.SUB_TYPE_MESSAGE);
         this.status = (byte) BitKit.setBit(this.status, STATUS_METHOD_PATH);
@@ -81,6 +103,7 @@ public class RpcRequest<T> extends RpcProtocol {
 
     @Override
     public void encode(ByteBuf out) {
+        // 编码
         super.encode(out);
         out.writeByte(this.status);
         if (isPath()) {
@@ -110,6 +133,7 @@ public class RpcRequest<T> extends RpcProtocol {
 
     @Override
     public void decode(ByteBuf in) {
+        // 解码
         super.decode(in);
         this.status = in.readByte();
         int length = in.readInt();
@@ -130,7 +154,8 @@ public class RpcRequest<T> extends RpcProtocol {
                 int paramLength = in.readInt();
                 byte[] bytes = new byte[paramLength];
                 in.readBytes(bytes);
-                paramsBytes[i] = bytes;
+                // 解码的时候只将其解析为字节，由后续根据类型反序列化
+                this.paramsBytes[i] = bytes;
             }
         }
     }
@@ -141,8 +166,8 @@ public class RpcRequest<T> extends RpcProtocol {
         }
         for (int i = 0; i < valueTypes.length; i++) {
             Type valueType = valueTypes[i];
-            byte[] bytes = paramsBytes[i];
-            params[i] = getSerializer().deserialize(bytes, valueType);
+            byte[] bytes = this.paramsBytes[i];
+            this.params[i] = getSerializer().deserialize(bytes, valueType);
         }
         return this.params;
     }

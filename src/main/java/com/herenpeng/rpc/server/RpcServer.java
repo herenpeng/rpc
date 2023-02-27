@@ -137,9 +137,9 @@ public class RpcServer {
             RpcMethodInvoke methodInvoke = getRpcMethodInvoke(request);
             Object rpcServer = methodInvoke.getRpcServer();
             Method method = methodInvoke.getMethod();
-            Object returnData;
+            Object[] params = request.getParams(method.getGenericParameterTypes());
             // 执行方法
-            returnData = method.invoke(rpcServer, request.getParams(method.getGenericParameterTypes()));
+            Object returnData = method.invoke(rpcServer, params);
             response.setReturnData(returnData);
         } catch (Exception e) {
             log.error("[RPC服务端]服务端执行方法发生异常：{}", request);
