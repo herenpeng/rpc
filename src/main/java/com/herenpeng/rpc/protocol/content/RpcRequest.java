@@ -35,6 +35,8 @@ public class RpcRequest<T> extends RpcProtocol {
 
     private Object[] params;
 
+    private byte[][] paramsBytes;
+
     @JsonIgnore
     private Type returnType;
 
@@ -94,12 +96,15 @@ public class RpcRequest<T> extends RpcProtocol {
                 out.writeBytes(methodLocatorBytes);
             }
         }
-        byte[] paramsBytes = getSerializer().serialize(this.params);
-        if (paramsBytes == null || paramsBytes.length == 0) {
+        if (this.params == null || this.params.length == 0) {
             out.writeInt(0);
         } else {
-            out.writeInt(paramsBytes.length);
-            out.writeBytes(paramsBytes);
+            out.writeInt(this.params.length);
+            for (Object param : this.params) {
+                byte[] paramBytes = getSerializer().serialize(param);
+                out.writeInt(paramBytes.length);
+                out.writeBytes(paramBytes);
+            }
         }
     }
 
@@ -118,11 +123,28 @@ public class RpcRequest<T> extends RpcProtocol {
             }
         }
         // 所有数据总长度
-        length = in.readInt();
-        if (length > 0) {
-            byte[] bytes = new byte[length];
-            in.readBytes(bytes);
-            this.params = getSerializer().deserialize(bytes, Object[].class);
+        int paramsLength = in.readInt();
+        if (paramsLength > 0) {
+            this.paramsBytes = new byte[paramsLength][];
+            for (int i = 0; i < paramsLength; i++) {
+                int paramLength = in.readInt();
+                byte[] bytes = new byte[paramLength];
+                in.readBytes(bytes);
+                paramsBytes[i] = bytes;
+            }
         }
     }
+
+    public Object[] getParams(Type[] valueTypes) {
+        if (this.params == null) {
+            this.params = new Object[valueTypes.length];
+        }
+        for (int i = 0; i < valueTypes.length; i++) {
+            Type valueType = valueTypes[i];
+            byte[] bytes = paramsBytes[i];
+            params[i] = getSerializer().deserialize(bytes, valueType);
+        }
+        return this.params;
+    }
+
 }

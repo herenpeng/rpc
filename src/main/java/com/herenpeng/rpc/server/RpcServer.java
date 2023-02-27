@@ -24,10 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @author herenpeng
@@ -142,11 +139,7 @@ public class RpcServer {
             Method method = methodInvoke.getMethod();
             Object returnData;
             // 执行方法
-            if (Collections.isEmpty(request.getParams())) {
-                returnData = method.invoke(rpcServer);
-            } else {
-                returnData = method.invoke(rpcServer, request.getParams());
-            }
+            returnData = method.invoke(rpcServer, request.getParams(method.getGenericParameterTypes()));
             response.setReturnData(returnData);
         } catch (Exception e) {
             log.error("[RPC服务端]服务端执行方法发生异常：{}", request);

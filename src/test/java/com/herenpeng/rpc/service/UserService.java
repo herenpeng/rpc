@@ -20,9 +20,12 @@ public interface UserService {
      */
     User getUserInfo(String name, RpcCallback<User> callback);
 
-
     List<User> getUserList();
 
     List<User> getUserList(RpcCallback<List<User>> callback);
+
+    User updateUser(User user);
+
+    List<User> updateUsers(List<User> users);
 
 }

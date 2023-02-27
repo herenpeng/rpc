@@ -44,4 +44,24 @@ public class UserServiceImpl implements UserService {
         return getUserList();
     }
 
+    @Override
+    public User updateUser(User user) {
+        user.setUsername("修改后的用户名");
+        return user;
+    }
+
+    @Override
+    public List<User> updateUsers(List<User> users) {
+        List<User> list = new ArrayList<>();
+        list.add(new User(15, "小明2", true, 18, new Date(), new Date(), new Date()));
+        list.add(new User(16, "小红2", false, 21, new Date(), new Date(), new Date()));
+        list.add(new User(17, "小雷2", true, 25, new Date(), new Date(), new Date()));
+        list.add(new User(18, "小刚3", true, 29, new Date(), new Date(), new Date()));
+        list.add(new User(19, "小李4", true, 42, new Date(), new Date(), new Date()));
+        list.add(new User(20, "小王5", false, 28, new Date(), new Date(), new Date()));
+        list.add(new User(21, "小周6", false, 35, new Date(), new Date(), new Date()));
+        return list;
+    }
+
+
 }

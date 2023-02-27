@@ -1,6 +1,5 @@
 package com.herenpeng.rpc.bean;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.io.Serializable;
