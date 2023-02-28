@@ -182,12 +182,14 @@ public class RpcServerProxy implements InvocationHandler {
             throw new RpcException("[RPC客户端]" + name + "：初始化失败，Socket Channel未激活，请重新初始化客户端");
         }
 
-        this.session.writeAndFlush(request);
-        // 异步调用
         if (request.isAsync()) {
+            // 异步调用
             callbackEvents.put(request.getSequence(), rpcInfo);
+            // 先将请求信息注册到回调事件上，然后再发送消息，保证服务端消息返回的时候请求信息已经注册了
+            this.session.writeAndFlush(request);
             return null;
         }
+        this.session.writeAndFlush(request);
         // 同步调用
         RpcResponse response;
         while (true) {
@@ -217,8 +219,9 @@ public class RpcServerProxy implements InvocationHandler {
      * @param response
      */
     private <T> void checkCallback(int sequence, RpcResponse response) {
-        RpcInfo<T> rpcInfo = callbackEvents.get(sequence);
+        RpcInfo<T> rpcInfo = callbackEvents.remove(sequence);
         if (rpcInfo == null) {
+            log.error("[RPC客户端]RPC请求未注册回调事件，消息序列号：{}", sequence);
             return;
         }
         // 记录响应数据
