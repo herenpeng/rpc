@@ -12,12 +12,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
+        <java.version>11</java.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <java.version>11</java.version>
         <rpc.version>1.0.0</rpc.version>
         <netty-all.version>4.1.67.Final</netty-all.version>
-        <slf4j-api.version>1.7.13</slf4j-api.version>
+        <slf4j-api.version>1.7.25</slf4j-api.version>
         <jackson-dataformat-yaml.version>2.13.4</jackson-dataformat-yaml.version>
         <lombok.version>1.18.24</lombok.version>
         <logback-classic.version>1.2.3</logback-classic.version>
