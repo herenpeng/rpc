@@ -55,8 +55,8 @@ public class RpcRequest<T> extends RpcProtocol {
     private RpcCallback<T> callable;
 
 
-    public RpcRequest(byte subType) {
-        super(RpcProtocol.TYPE_REQUEST, subType);
+    public RpcRequest(byte subType, byte serialize) {
+        super(RpcProtocol.TYPE_REQUEST, subType, serialize);
     }
 
     /**
@@ -68,8 +68,9 @@ public class RpcRequest<T> extends RpcProtocol {
      * @param async      是否异步
      * @param callable   回调函数，同步为null
      */
-    public RpcRequest(RpcMethodLocator locator, Object[] params, Type returnType, boolean async, RpcCallback<T> callable) {
-        super(RpcProtocol.TYPE_REQUEST, RpcProtocol.SUB_TYPE_MESSAGE);
+    public RpcRequest(RpcMethodLocator locator, Object[] params, Type returnType, boolean async,
+                      RpcCallback<T> callable, byte serialize) {
+        super(RpcProtocol.TYPE_REQUEST, RpcProtocol.SUB_TYPE_MESSAGE, serialize);
         this.methodLocator = locator;
         this.params = params;
         this.returnType = returnType;
@@ -86,8 +87,8 @@ public class RpcRequest<T> extends RpcProtocol {
      * @param async      是否异步
      * @param callable   回调函数，同步为null
      */
-    public RpcRequest(String path, Object[] params, Type returnType, boolean async, RpcCallback<T> callable) {
-        super(RpcProtocol.TYPE_REQUEST, RpcProtocol.SUB_TYPE_MESSAGE);
+    public RpcRequest(String path, Object[] params, Type returnType, boolean async, RpcCallback<T> callable, byte serialize) {
+        super(RpcProtocol.TYPE_REQUEST, RpcProtocol.SUB_TYPE_MESSAGE, serialize);
         this.status = (byte) BitKit.setBit(this.status, STATUS_METHOD_PATH);
         this.methodPath = path;
         this.params = params;
@@ -106,18 +107,12 @@ public class RpcRequest<T> extends RpcProtocol {
         // 编码
         super.encode(out);
         out.writeByte(this.status);
-        if (isPath()) {
-            byte[] methodPathBytes = getSerializer().serialize(this.methodPath);
-            out.writeInt(methodPathBytes.length);
-            out.writeBytes(methodPathBytes);
+        byte[] methodBytes = getSerializer().serialize(isPath() ? this.methodPath : this.methodLocator);
+        if (methodBytes == null || methodBytes.length == 0) {
+            out.writeInt(0);
         } else {
-            byte[] methodLocatorBytes = getSerializer().serialize(this.methodLocator);
-            if (methodLocatorBytes == null || methodLocatorBytes.length == 0) {
-                out.writeInt(0);
-            } else {
-                out.writeInt(methodLocatorBytes.length);
-                out.writeBytes(methodLocatorBytes);
-            }
+            out.writeInt(methodBytes.length);
+            out.writeBytes(methodBytes);
         }
         if (this.params == null || this.params.length == 0) {
             out.writeInt(0);

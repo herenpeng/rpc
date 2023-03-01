@@ -4,6 +4,7 @@ rpc:
     reconnection-time: 1000
     heartbeat-time: 10000
     heartbeat-invalid-times: 3
+    serialize: 1
     heartbeat-log-enable: false
     monitor-log-enable: true
   server:

@@ -1,6 +1,7 @@
 package com.herenpeng.rpc.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.herenpeng.rpc.kit.serialize.Serializer;
 import lombok.*;
 
 /**
@@ -36,6 +37,12 @@ public class RpcClientConfig extends RpcConfig {
      */
     @JsonProperty("heartbeat-invalid-times")
     private int heartbeatInvalidTimes = 3;
+
+    /**
+     * 序列化方式
+     */
+    @JsonProperty("serialize")
+    private byte serialize = Serializer.JSON;
 
     /**
      * 开启客户端心跳日志

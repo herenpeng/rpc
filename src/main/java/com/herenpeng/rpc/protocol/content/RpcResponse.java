@@ -21,8 +21,8 @@ public class RpcResponse extends RpcProtocol {
 
     private String exception;
 
-    public RpcResponse(byte subType, int sequence) {
-        super(TYPE_RESPONSE, subType, sequence);
+    public RpcResponse(byte subType, int sequence, byte serialize) {
+        super(TYPE_RESPONSE, subType, sequence, serialize);
     }
 
 

@@ -14,6 +14,9 @@ import lombok.*;
 @AllArgsConstructor
 public class RpcServerConfig {
 
+    /**
+     * 是否启用心跳日志
+     */
     @JsonProperty("heartbeat-log-enable")
     private boolean heartbeatLogEnable = false;
 

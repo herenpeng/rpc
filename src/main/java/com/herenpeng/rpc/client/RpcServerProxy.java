@@ -156,14 +156,16 @@ public class RpcServerProxy implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) {
         RpcMethodLocator methodLocator = cache.getMethodLocator(method);
         RpcCallback<?> callback = RpcKit.getRpcCallback(args, methodLocator.isAsync());
-        RpcRequest<?> request = new RpcRequest<>(methodLocator, args, method.getGenericReturnType(), methodLocator.isAsync(), callback);
+        RpcRequest<?> request = new RpcRequest<>(methodLocator, args, method.getGenericReturnType(),
+                methodLocator.isAsync(), callback, clientConfig.getSerialize());
         return invoke(request);
     }
 
     public <T> T invokeMethod(String path, Object[] args, Type returnType, boolean async, RpcCallback<T> callback) {
-        RpcRequest<T> request = new RpcRequest<>(path, args, returnType, async, callback);
+        RpcRequest<T> request = new RpcRequest<>(path, args, returnType, async, callback, clientConfig.getSerialize());
         return invoke(request);
     }
+
 
     /**
      * 真正执行请求的方法
@@ -254,7 +256,7 @@ public class RpcServerProxy implements InvocationHandler {
     private <T> void initHeartbeat() {
         RpcScheduler.doLoopTask(() -> {
             checkHeartbeat();
-            RpcRequest<T> request = new RpcRequest<>(RpcProtocol.SUB_TYPE_EMPTY);
+            RpcRequest<T> request = new RpcRequest<>(RpcProtocol.SUB_TYPE_EMPTY, clientConfig.getSerialize());
             clientHeartbeatQueue.offer(request.getSequence());
             // 构造一个消息
             this.session.writeAndFlush(request);

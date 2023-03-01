@@ -1,5 +1,7 @@
 package com.herenpeng.rpc.kit.serialize;
 
+import com.herenpeng.rpc.exception.RpcException;
+
 import java.lang.reflect.Type;
 
 /**
@@ -9,6 +11,7 @@ import java.lang.reflect.Type;
 public interface Serializer {
 
     byte JSON = 1;
+    byte HESSIAN = 2;
 
     /**
      * 序列化方法的唯一ID
@@ -22,8 +25,9 @@ public interface Serializer {
      *
      * @param data 序列化对象
      * @return 字节数组
+     * @throws RpcException RPC
      */
-    byte[] serialize(Object data);
+    byte[] serialize(final Object data) throws RpcException;
 
     /**
      * 根据具体的对象类型反序列化
@@ -32,7 +36,8 @@ public interface Serializer {
      * @param valueType 反序列化类型
      * @param <T>       泛型
      * @return 反序列的对象
+     * @throws RpcException RPC异常
      */
-    <T> T deserialize(byte[] bytes, Type valueType);
+    <T> T deserialize(final byte[] bytes, Type valueType) throws RpcException;
 
 }

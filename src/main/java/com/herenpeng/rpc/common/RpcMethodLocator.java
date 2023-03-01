@@ -2,6 +2,8 @@ package com.herenpeng.rpc.common;
 
 import lombok.*;
 
+import java.io.Serializable;
+
 /**
  * @author herenpeng
  * @since 2023-02-11 11:53
@@ -11,7 +13,7 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-public class RpcMethodLocator {
+public class RpcMethodLocator implements Serializable {
 
     private String className;
 
