@@ -294,7 +294,7 @@ public class MockRpcClient {
         rpcPathReturnDepartment(rpcClient);
 
         // 路径调用，返回 Department[] 数组对象
-        rpcPathReturnDepartmentArray(rpcClient);
+        // rpcPathReturnDepartmentArray(rpcClient);
 
         // 路径调用，返回 List<Department> 集合对象
         rpcPathReturnDepartmentList(rpcClient);
