@@ -37,7 +37,7 @@ public class MockRpcClient {
         rpcPathReturnDepartment(rpcClient);
 
         // 路径调用，返回 Department[] 数组对象
-        rpcPathReturnDepartmentArray(rpcClient);
+        // rpcPathReturnDepartmentArray(rpcClient);
 
         // 路径调用，返回 List<Department> 集合对象
         rpcPathReturnDepartmentList(rpcClient);
@@ -105,6 +105,7 @@ public class MockRpcClient {
 
 
     private static void rpcPathReturnDepartmentArray(RpcClient rpcClient) {
+        // 如果使用Hessian，这个方法序列化会失败，因为 /department/list 这个接口返回的是一个 ArrayList<Department> 对象，序列化为数组会失败，但是 Json 则可以成功
         Department[] departmentList = rpcClient.get(MockRpcServer, "/department/list", Department[].class);
         for (Department dept : departmentList) {
             System.err.println("路径式同步调用7 =====> " + dept.getId() + "---" + dept.getName());
