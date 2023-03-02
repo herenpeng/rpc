@@ -344,6 +344,7 @@ public class MockRpcClient {
 
 3、rpc的异步调用，接口方法参数中多一个`RpcCallback`的函数式接口参数，用于处理rpc的异步回调事件，服务端该参数为`null`。
 
+4、如果使用 Hessian 作为序列化工具，所有需要被序列化的实体类，都要实现 `java.io.Serializable` 接口，否则无法序列化。
 
 ## 未来预期功能
 

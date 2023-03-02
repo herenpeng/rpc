@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.herenpeng.rpc.kit.serialize.Serializer;
 import lombok.*;
 
+import java.io.Serializable;
+
 /**
  * @author herenpeng
  */
@@ -12,7 +14,7 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-public class RpcClientConfig extends RpcConfig {
+public class RpcClientConfig extends RpcConfig implements Serializable {
 
     /**
      * 同步调用超时时长，默认1000毫秒

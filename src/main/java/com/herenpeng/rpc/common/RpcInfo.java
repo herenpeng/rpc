@@ -4,6 +4,8 @@ import com.herenpeng.rpc.protocol.content.RpcRequest;
 import com.herenpeng.rpc.protocol.content.RpcResponse;
 import lombok.*;
 
+import java.io.Serializable;
+
 /**
  * @author herenpeng
  * @since 2023-02-14 20:26
@@ -13,7 +15,7 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-public class RpcInfo<T> {
+public class RpcInfo<T> implements Serializable {
 
     @NonNull
     private RpcRequest<T> request;

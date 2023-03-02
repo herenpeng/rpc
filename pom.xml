@@ -8,6 +8,13 @@
     <artifactId>rpc</artifactId>
     <version>${rpc.version}</version>
 
+    <developers>
+        <developer>
+            <name>herenpeng</name>
+            <email>he.ren.peng@qq.com</email>
+        </developer>
+    </developers>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -16,16 +23,20 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <rpc.version>1.0.0</rpc.version>
+        <!-- default scope -->
         <netty-all.version>4.1.67.Final</netty-all.version>
         <slf4j-api.version>1.7.25</slf4j-api.version>
         <jackson-dataformat-yaml.version>2.13.4</jackson-dataformat-yaml.version>
         <hessian.version>4.0.66</hessian.version>
+        <!-- compile scope -->
         <lombok.version>1.18.24</lombok.version>
+        <!-- test scope -->
         <logback-classic.version>1.2.3</logback-classic.version>
         <junit.version>4.13.2</junit.version>
     </properties>
 
     <dependencies>
+        <!-- default scope -->
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
@@ -46,12 +57,14 @@
             <artifactId>hessian</artifactId>
             <version>${hessian.version}</version>
         </dependency>
+        <!-- compile scope -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>compile</scope>
         </dependency>
+        <!-- test scope -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>

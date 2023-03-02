@@ -25,7 +25,7 @@ public class HessianSerializer implements Serializer {
     }
 
     @Override
-    public byte[] serialize(final Object data) throws RpcException {
+    public byte[] serialize(final Object data) {
         ByteArrayOutputStream os;
         Hessian2Output out = null;
         try {
@@ -34,8 +34,8 @@ public class HessianSerializer implements Serializer {
             out.writeObject(data);
             out.flush();
             return os.toByteArray();
-        } catch (IOException e) {
-            log.error("[RPC工具]Hessian序列化错误：{}", data);
+        } catch (Exception e) {
+            log.error("[RPC工具]Hessian序列化错误：{}，错误信息：{}", data, e.getMessage());
             throw new RpcException("[RPC工具]Hessian序列化错误：" + data);
         } finally {
             if (out != null) {
@@ -46,19 +46,18 @@ public class HessianSerializer implements Serializer {
                 }
             }
         }
-
     }
 
     @Override
-    public <T> T deserialize(final byte[] bytes, Type valueType) throws RpcException {
+    public <T> T deserialize(final byte[] bytes, Type valueType) {
         ByteArrayInputStream is;
         Hessian2Input in = null;
         try {
             is = new ByteArrayInputStream(bytes);
             in = new Hessian2Input(is);
             return (T) in.readObject();
-        } catch (Exception ex) {
-            log.error("[RPC工具]Hessian反序列化错误：{}, 反序列化类型：{}", bytes, valueType);
+        } catch (Exception e) {
+            log.error("[RPC工具]Hessian反序列化错误：{}, 反序列化类型：{}，错误信息：{}", bytes, valueType, e.getMessage());
             throw new RpcException("[RPC工具]Hessian反序列化错误：" + Arrays.toString(bytes) + ", 反序列化类型：" + valueType);
         } finally {
             if (in != null) {

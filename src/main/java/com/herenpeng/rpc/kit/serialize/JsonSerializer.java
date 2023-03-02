@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
 /**
@@ -23,8 +22,6 @@ public class JsonSerializer implements Serializer {
 
     public JsonSerializer() {
         objectMapper = new ObjectMapper();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        objectMapper.setDateFormat(format);
     }
 
     @Override
@@ -37,7 +34,7 @@ public class JsonSerializer implements Serializer {
         try {
             return objectMapper.writeValueAsBytes(data);
         } catch (JsonProcessingException e) {
-            log.error("[RPC工具]Json序列化错误：{}", data);
+            log.error("[RPC工具]Json序列化错误：{}，错误信息：{}", data, e.getMessage());
             throw new RpcException("[RPC工具]Json序列化错误：" + data);
         }
     }
@@ -49,7 +46,7 @@ public class JsonSerializer implements Serializer {
             JavaType javaType = typeFactory.constructType(valueType);
             return objectMapper.readValue(bytes, javaType);
         } catch (IOException e) {
-            log.error("[RPC工具]Json反序列化错误：{}，反序列化类型：{}", bytes, valueType);
+            log.error("[RPC工具]Json反序列化错误：{}，反序列化类型：{}，错误信息：{}", bytes, valueType, e.getMessage());
             throw new RpcException("[RPC工具]Json反序列化错误：" + Arrays.toString(bytes) + "，反序列化类型：" + valueType);
         }
     }

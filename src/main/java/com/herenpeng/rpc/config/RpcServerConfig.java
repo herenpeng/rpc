@@ -3,6 +3,8 @@ package com.herenpeng.rpc.config;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.io.Serializable;
+
 /**
  * @author herenpeng
  * @since 2023-02-09 21:53
@@ -12,7 +14,7 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-public class RpcServerConfig {
+public class RpcServerConfig implements Serializable {
 
     /**
      * 是否启用心跳日志
