@@ -1,7 +1,5 @@
 package com.herenpeng.rpc.kit;
 
-import com.herenpeng.rpc.exception.RpcException;
-
 /**
  * @author herenpeng
  */

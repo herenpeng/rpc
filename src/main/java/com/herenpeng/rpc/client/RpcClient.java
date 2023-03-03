@@ -50,6 +50,16 @@ public class RpcClient {
         return (T) rpc;
     }
 
+    /**
+     * 同步调用方法
+     *
+     * @param name       服务代理名称
+     * @param path       远端路径
+     * @param returnType 引用类型
+     * @param args       参数
+     * @param <T>        泛型
+     * @return 同步返回数据
+     */
     public <T> T get(String name, String path, ValueType<T> returnType, Object... args) {
         RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);
         if (rpcServerProxy == null) {
@@ -58,7 +68,17 @@ public class RpcClient {
         return rpcServerProxy.invokeMethod(path, args, returnType.get(), false, null);
     }
 
-    public <T> T get(String name, String path, Type returnType, Object... args) {
+    /**
+     * 同步调用方法
+     *
+     * @param name       服务代理名称
+     * @param path       远端路径
+     * @param returnType Class类型
+     * @param args       参数
+     * @param <T>        泛型
+     * @return 同步返回数据
+     */
+    public <T> T get(String name, String path, Class<T> returnType, Object... args) {
         RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);
         if (rpcServerProxy == null) {
             throw new RpcException("[RPC客户端]服务" + name + "未注册，请先注册该服务");
@@ -66,6 +86,16 @@ public class RpcClient {
         return rpcServerProxy.invokeMethod(path, args, returnType, false, null);
     }
 
+    /**
+     * 异步调用方法
+     *
+     * @param name       服务代理名称
+     * @param path       远端路径
+     * @param returnType 引用类型
+     * @param callback   异步回调
+     * @param args       参数
+     * @param <T>        泛型
+     */
     public <T> void get(String name, String path, ValueType<T> returnType, RpcCallback<T> callback, Object... args) {
         RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);
         if (rpcServerProxy == null) {
@@ -74,6 +104,16 @@ public class RpcClient {
         rpcServerProxy.invokeMethod(path, args, returnType.get(), true, callback);
     }
 
+    /**
+     * 异步调用方法
+     *
+     * @param name       服务代理名称
+     * @param path       远端路径
+     * @param returnType Class类型
+     * @param callback   异步回调
+     * @param args       参数
+     * @param <T>        泛型
+     */
     public <T> void get(String name, String path, Class<T> returnType, RpcCallback<T> callback, Object... args) {
         RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);
         if (rpcServerProxy == null) {
