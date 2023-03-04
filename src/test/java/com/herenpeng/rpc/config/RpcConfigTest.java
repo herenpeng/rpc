@@ -11,7 +11,7 @@ public class RpcConfigTest {
 
     @Test
     public void configTest() {
-        RpcConfigProcessor processor = new RpcConfigProcessor();
+        RpcConfigProcessor processor = new RpcConfigProcessor("rpc.yaml");
         RpcConfig rpc = processor.getRpc();
         Assert.assertNotNull(rpc);
 

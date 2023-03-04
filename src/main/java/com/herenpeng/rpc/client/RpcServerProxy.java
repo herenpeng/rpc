@@ -83,7 +83,7 @@ public class RpcServerProxy implements InvocationHandler {
     }
 
     private void initRpcConfig() {
-        RpcConfigProcessor processor = new RpcConfigProcessor();
+        RpcConfigProcessor processor = new RpcConfigProcessor("rpc.yaml");
         this.config = processor.getRpc();
         this.clientConfig = this.config == null ? new RpcClientConfig() : this.config.getClient();
         log.info("[RPC客户端]{}：配置初始化完成，配置信息：{}", name, config);

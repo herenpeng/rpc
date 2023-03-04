@@ -1,12 +1,13 @@
 package com.herenpeng.rpc.server;
 
+import com.herenpeng.rpc.annotation.RpcApplication;
 import com.herenpeng.rpc.common.RpcMethodInvoke;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.config.RpcConfigProcessor;
 import com.herenpeng.rpc.config.RpcServerConfig;
+import com.herenpeng.rpc.exception.RpcException;
 import com.herenpeng.rpc.kit.ClassScanner;
-import com.herenpeng.rpc.kit.Collections;
 import com.herenpeng.rpc.kit.StringUtils;
 import com.herenpeng.rpc.kit.thread.RpcThreadFactory;
 import com.herenpeng.rpc.protocol.ProtocolDecoder;
@@ -48,37 +49,49 @@ public class RpcServer {
     /**
      * 使用指定的端口启动rpc服务器（优先级大于配置端口）
      *
-     * @param port            指定的端口
-     * @param rpcScannerClass 需要扫描的Root类
+     * @param rpcApplicationClass 需要扫描的Root类
      */
-    public void start(int port, Class<?> rpcScannerClass) {
+    public void start(Class<?> rpcApplicationClass) {
         log.info("[RPC服务端]正在初始化");
         long start = System.currentTimeMillis();
+        // 准备启动相关事务
+        RpcApplication application = readyToStart(rpcApplicationClass);
         // 初始化rpc配置
-        initRpcConfig();
+        initRpcConfig(application.configFile());
         // 初始化rpc缓存
-        initRpcCache(rpcScannerClass);
+        initRpcCache(rpcApplicationClass);
         // 初始化rpc服务端
-        initRpcServer(port);
+        initRpcServer(serverConfig.getPort());
         long end = System.currentTimeMillis();
-        log.info("[RPC服务端]初始化完成，端口：{}，共耗时{}毫秒", port, end - start);
+        log.info("[RPC服务端]初始化完成，端口：{}，共耗时{}毫秒", serverConfig.getPort(), end - start);
     }
 
 
-    private void initRpcConfig() {
-        RpcConfigProcessor processor = new RpcConfigProcessor();
+    /**
+     * 准备启动相关事务
+     */
+    private RpcApplication readyToStart(Class<?> rpcApplicationClass) {
+        if (rpcApplicationClass == null) {
+            throw new RpcException("[RPC服务端]rpc应用类对象为空");
+        }
+        RpcApplication application = rpcApplicationClass.getAnnotation(RpcApplication.class);
+        if (application == null) {
+            throw new RpcException("[RPC服务端]rpc应用类 @RpcApplication 注解为空");
+        }
+        return application;
+    }
+
+
+    private void initRpcConfig(String configFile) {
+        RpcConfigProcessor processor = new RpcConfigProcessor(configFile);
         this.config = processor.getRpc();
         this.serverConfig = this.config == null ? new RpcServerConfig() : this.config.getServer();
         log.info("[RPC服务端]配置初始化完成，配置信息：{}", config);
     }
 
-    private void initRpcCache(Class<?> rpcScannerClass) {
+    private void initRpcCache(Class<?> rpcApplicationClass) {
         cache = new RpcServerCache();
-        if (rpcScannerClass == null) {
-            log.warn("[RPC服务端]rpc接口包扫描类对象为空");
-            return;
-        }
-        String packageName = rpcScannerClass.getPackageName();
+        String packageName = rpcApplicationClass.getPackageName();
         ClassScanner scanner = new ClassScanner(packageName);
         List<Class<?>> classList = scanner.listClass();
 

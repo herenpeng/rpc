@@ -8,4 +8,5 @@ rpc:
     heartbeat-log-enable: false
     monitor-log-enable: true
   server:
+    port: 10000
     heartbeat-log-enable: false

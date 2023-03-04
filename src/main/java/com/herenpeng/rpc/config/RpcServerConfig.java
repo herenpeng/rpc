@@ -16,6 +16,9 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class RpcServerConfig implements Serializable {
 
+    @JsonProperty("port")
+    private int port = 10000;
+
     /**
      * 是否启用心跳日志
      */

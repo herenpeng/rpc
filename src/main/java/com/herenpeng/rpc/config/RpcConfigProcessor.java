@@ -17,14 +17,18 @@ public class RpcConfigProcessor {
 
     private RpcConfig rpc;
 
-    public RpcConfigProcessor() {
-        init();
+    public RpcConfigProcessor(String configFile) {
+        init(configFile);
     }
+    //
+    // public RpcConfigProcessor() {
+    //     init();
+    // }
 
-    private void init() {
+    private void init(String configFile) {
         // 配置文件优先级：代码配置 > rpc.yaml > 默认配置
         try {
-            InputStream yamlStream = RpcConfigProcessor.class.getClassLoader().getResourceAsStream("rpc.yaml");
+            InputStream yamlStream = RpcConfigProcessor.class.getClassLoader().getResourceAsStream(configFile);
             if (yamlStream == null) {
                 this.rpc = new RpcConfig();
                 return;
