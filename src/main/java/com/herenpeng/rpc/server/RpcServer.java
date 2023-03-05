@@ -1,6 +1,7 @@
 package com.herenpeng.rpc.server;
 
 import com.herenpeng.rpc.annotation.RpcApplication;
+import com.herenpeng.rpc.annotation.RpcService;
 import com.herenpeng.rpc.common.RpcMethodInvoke;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcConfig;
@@ -51,42 +52,17 @@ public class RpcServer {
      *
      * @param rpcApplicationClass 需要扫描的Root类
      */
-    public void start(Class<?> rpcApplicationClass) {
+    public void start(Class<?> rpcApplicationClass, RpcConfig rpcConfig) {
         log.info("[RPC服务端]正在初始化");
         long start = System.currentTimeMillis();
-        // 准备启动相关事务
-        RpcApplication application = readyToStart(rpcApplicationClass);
-        // 初始化rpc配置
-        initRpcConfig(application.configFile());
+        this.config = rpcConfig;
+        this.serverConfig = this.config == null ? new RpcServerConfig() : this.config.getServer();
         // 初始化rpc缓存
         initRpcCache(rpcApplicationClass);
         // 初始化rpc服务端
         initRpcServer(serverConfig.getPort());
         long end = System.currentTimeMillis();
         log.info("[RPC服务端]初始化完成，端口：{}，共耗时{}毫秒", serverConfig.getPort(), end - start);
-    }
-
-
-    /**
-     * 准备启动相关事务
-     */
-    private RpcApplication readyToStart(Class<?> rpcApplicationClass) {
-        if (rpcApplicationClass == null) {
-            throw new RpcException("[RPC服务端]rpc应用类对象为空");
-        }
-        RpcApplication application = rpcApplicationClass.getAnnotation(RpcApplication.class);
-        if (application == null) {
-            throw new RpcException("[RPC服务端]rpc应用类 @RpcApplication 注解为空");
-        }
-        return application;
-    }
-
-
-    private void initRpcConfig(String configFile) {
-        RpcConfigProcessor processor = new RpcConfigProcessor(configFile);
-        this.config = processor.getRpc();
-        this.serverConfig = this.config == null ? new RpcServerConfig() : this.config.getServer();
-        log.info("[RPC服务端]配置初始化完成，配置信息：{}", config);
     }
 
     private void initRpcCache(Class<?> rpcApplicationClass) {

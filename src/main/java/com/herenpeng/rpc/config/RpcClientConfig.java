@@ -14,7 +14,22 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-public class RpcClientConfig extends RpcConfig implements Serializable {
+public class RpcClientConfig implements Serializable {
+
+    /**
+     * 客户端名称
+     */
+    private String name;
+
+    /**
+     * 远端服务主机地址
+     */
+    private String host;
+
+    /**
+     * 远端服务端口
+     */
+    private int port;
 
     /**
      * 同步调用超时时长，默认1000毫秒

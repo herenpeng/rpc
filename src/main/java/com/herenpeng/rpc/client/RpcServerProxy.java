@@ -5,7 +5,6 @@ import com.herenpeng.rpc.common.RpcInfo;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcClientConfig;
 import com.herenpeng.rpc.config.RpcConfig;
-import com.herenpeng.rpc.config.RpcConfigProcessor;
 import com.herenpeng.rpc.exception.RpcException;
 import com.herenpeng.rpc.kit.*;
 import com.herenpeng.rpc.kit.thread.RpcScheduler;
@@ -19,6 +18,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @author herenpeng
  */
 @Slf4j
+@Getter
 public class RpcServerProxy implements InvocationHandler {
 
     private Channel session;
@@ -59,19 +60,23 @@ public class RpcServerProxy implements InvocationHandler {
         }
     }
 
-    public RpcServerProxy(String name, String host, int port, Class<?> rpcScannerClass) {
-        log.info("[RPC客户端]{}：正在初始化", name);
+
+    public RpcServerProxy(Class<?> rpcApplicationClass, RpcConfig rpcConfig) {
+        this.config = rpcConfig;
+        this.clientConfig = this.config.getClient();
+        log.info("[RPC客户端]{}：正在初始化", clientConfig.getName());
+        // 获取对应的远端配置
         this.instance = this;
-        this.name = name;
-        this.host = host;
-        this.port = port;
-        init(rpcScannerClass);
+        this.name = clientConfig.getName();
+        this.host = clientConfig.getHost();
+        this.port = clientConfig.getPort();
+        init(rpcApplicationClass);
     }
 
     public void init(Class<?> rpcScannerClass) {
         long start = System.currentTimeMillis();
         // 初始化客户端配置
-        initRpcConfig();
+        // initRpcConfig();
         // 初始化客户端缓存
         initRpcClientCache(rpcScannerClass);
         // 初始化服务端代理
@@ -82,12 +87,12 @@ public class RpcServerProxy implements InvocationHandler {
         log.info("[RPC客户端]{}：初始化完成，已创建{}服务代理，主机：{}，端口：{}，共耗时{}毫秒", name, name, host, port, end - start);
     }
 
-    private void initRpcConfig() {
-        RpcConfigProcessor processor = new RpcConfigProcessor("rpc.yaml");
-        this.config = processor.getRpc();
-        this.clientConfig = this.config == null ? new RpcClientConfig() : this.config.getClient();
-        log.info("[RPC客户端]{}：配置初始化完成，配置信息：{}", name, config);
-    }
+    // private void initRpcConfig() {
+    //     RpcConfigProcessor processor = new RpcConfigProcessor("rpc.yaml");
+    //     this.config = processor.getRpc();
+    //     this.clientConfig = this.config == null ? new RpcClientConfig() : this.config.getClient();
+    //     log.info("[RPC客户端]{}：配置初始化完成，配置信息：{}", name, config);
+    // }
 
     private void initRpcClientCache(Class<?> rpcScannerClass) {
         this.cache = new RpcClientCache();

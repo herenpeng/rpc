@@ -20,10 +20,6 @@ public class RpcConfigProcessor {
     public RpcConfigProcessor(String configFile) {
         init(configFile);
     }
-    //
-    // public RpcConfigProcessor() {
-    //     init();
-    // }
 
     private void init(String configFile) {
         // 配置文件优先级：代码配置 > rpc.yaml > 默认配置

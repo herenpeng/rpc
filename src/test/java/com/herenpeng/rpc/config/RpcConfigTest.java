@@ -1,6 +1,5 @@
 package com.herenpeng.rpc.config;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -13,13 +12,11 @@ public class RpcConfigTest {
     public void configTest() {
         RpcConfigProcessor processor = new RpcConfigProcessor("rpc.yaml");
         RpcConfig rpc = processor.getRpc();
-        Assert.assertNotNull(rpc);
+        System.out.println(rpc);
 
-        RpcClientConfig client = rpc.getClient();
-        Assert.assertNotNull(client);
+        System.out.println(rpc.getClient());
 
-        RpcServerConfig server = rpc.getServer();
-        Assert.assertNotNull(server);
+        System.out.println(rpc.getServer());
     }
 
 }

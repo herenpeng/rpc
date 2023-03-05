@@ -4,9 +4,11 @@
 
 - 基于 JDK11 开发
 - 该项目是基于 Netty4 的一个简易的 RPC 框架
+- 配置即实例，无需编写代码，根据配置内容自动实例化 RPC 实例
 - 拥有完备的服务启动、心跳监控、服务重连等机制
 - 客户端支持动态代理，路径调用两种远程调用方式
 - 支持同步和异步调用，异步支持函数式回调
+- 支持 Json 和 Hessian 两种序列化方式，可以通过配置自由切换，无需改动代码
 - 支持自定义通信协议
 
 <p align="center">
@@ -26,7 +28,7 @@
 <br/>
 
 
-## RPC 入门
+# RPC 入门
 
 RPC 框架的入门，首先要使用这个 RPC 框架，搭建一个简单的 RPC 环境，使得 RPC 客户端可以通过 RPC 协议远程调用 RPC 服务端。
 
@@ -55,29 +57,59 @@ RPC 框架的入门，首先要使用这个 RPC 框架，搭建一个简单的 R
 </dependencies>
 ```
 
-## 创建RPC服务端
+# 配置即实例
 
-> 在项目下创建`com.herenpeng.rpc`文件包，并在该包下创建`MockRpcServer`、`UserService`接口和`UserServiceImpl`实现类。
+一份完整的配置，即是一个完整的 RPC 对象，如果需要启动一个 RPC 客户端，可以使用以下的配置：
 
-### 初始化服务端
+```yaml
+rpc:
+  client:
+    name: MockRpcClient
+    host: 127.0.0.1
+    port: 10000
+    sync-timeout: 1000
+    reconnection-time: 1000
+    heartbeat-time: 10000
+    heartbeat-invalid-times: 3
+    serialize: 1
+    heartbeat-log-enable: false
+    monitor-log-enable: true
+```
+
+如果需要启动一个 RPC 服务端，可以使用以下的配置：
+```yaml
+rpc:
+  server:
+    name: MockRpcServer
+    port: 10000
+    heartbeat-log-enable: false
+```
+
+- 如果需要同时启动一个 RPC 服务端和一个 RPC 客户端，那么只需要将两份配置合并即可。
+
+- 如果需要启动多个 RPC 服务端或者多个 RPC 客户端，则可以创建多份配置文件，并通过注解 `@RpcApplication` 中的属性 `configFiles()` 来标识多份需要实例化的配置文件。
+
+# 初始化RPC实例
+
+> 在项目下创建`com.herenpeng.rpc`文件包，并在该包下创建`MockRpc.java`文件。
+
+RPC 框架，可以直接使用`RpcRunner`启动类根据配置文件信息来初始化 RPC 实例：
 
 ```java
-package com.herenpeng.rpc;
+@RpcApplication
+public class MockRpc {
 
-import com.herenpeng.rpc.server.RpcServer;
-
-public class MockRpcServer {
-
-    public static void main(String[] args) {
-
-        RpcServer rpcServer = new RpcServer();
-        rpcServer.start(MockRpcServer.class);
+    public static void main(String[] args) throws Exception  {
+        RpcRunner.run(MockRpc.class, args);
     }
 
 }
 ```
 
-### 创建服务端接口及其实现类
+
+## 创建RPC服务端接口
+
+> 在项目`com.herenpeng.rpc`文件包下创建`UserService`接口和`UserServiceImpl`实现类。
 
 ```java
 @RpcApi
@@ -152,44 +184,25 @@ public class UserServiceImpl implements UserService {
 
 ## 创建RPC客户端
 
-> 在项目下创建`com.herenpeng.rpc`文件包，并在该包下创建`MockRpcClient`类和 `UserService` 接口，其中`UserService`可以和服务端使用同一个接口文件。
+> 在项目`com.herenpeng.rpc`文件包下创建 `UserService` 接口，`UserService`可以和服务端使用同一个接口文件。
 
-### 初始化客户端
 
-```java
-package com.herenpeng.rpc;
+# RPC调用
 
-import com.herenpeng.rpc.client.RpcClient;
-
-public class MockRpcClient {
-
-    private static final String MockRpcServer = "MockRpcServer";
-
-    public static void main(String[] args) throws InterruptedException {
-        // 创建客户端并调用方法
-        RpcClient rpcClient = new RpcClient();
-        rpcClient.register(MockRpcServer, "127.0.0.1", 10000, MockRpcClient.class);
-    }
-}
-```
-
-## RPC调用
-
-> 先启动`MockRpcServer`类，然后启动`MockRpcClient`类。
+> 启动`MockRpc`类。
 
 ```java
-public class MockRpcClient {
+@RpcApplication
+public class MockRpc {
 
-    private static final String MockRpcServer = "MockRpcServer";
+    private static final String MockRpcClient = "MockRpcClient";
 
-    public static void main(String[] args) throws InterruptedException {
-        // 创建客户端并调用方法
-        RpcClient rpcClient = new RpcClient();
-        rpcClient.register(MockRpcServer, "127.0.0.1", 10000, MockRpcClient.class);
-
+    public static void main(String[] args) throws Exception {
+        RpcRunner.run(MockRpc.class, args);
+        
         Thread.sleep(1500);
 
-        UserService userService = rpcClient.createRpc(MockRpcServer, UserService.class);
+        UserService userService = RpcClient.createRpc(MockRpcClient, UserService.class);
 
         // 服务代理调用，返回 User 对象
         rpcServerProxyReturnUser(userService);
@@ -251,9 +264,9 @@ public class MockRpcClient {
 }
 ```
 
-## RPC 路径式调用
+# RPC 路径式调用
 
-### 创建创建服务端
+## 创建创建服务端接口
 ```java
 @RpcService("department")
 public class DepartmentService {
@@ -277,46 +290,44 @@ public class DepartmentService {
 }
 ```
 
-### RPC客户端调用
+## RPC客户端调用
 ```java
-public class MockRpcClient {
+@RpcApplication
+public class MockRpc {
+    private static final String MockRpcClient = "MockRpcClient";
 
-    private static final String MockRpcServer = "MockRpcServer";
-
-    public static void main(String[] args) throws InterruptedException {
-        // 创建客户端并调用方法
-        RpcClient rpcClient = new RpcClient();
-        rpcClient.register(MockRpcServer, "127.0.0.1", 10000, MockRpcClient.class);
+    public static void main(String[] args) throws Exception {
+        RpcRunner.run(MockRpc.class, args);
 
         Thread.sleep(1500);
 
         // 路径调用，返回 Department 对象
-        rpcPathReturnDepartment(rpcClient);
+        rpcPathReturnDepartment();
 
         // 路径调用，返回 Department[] 数组对象
-        // rpcPathReturnDepartmentArray(rpcClient);
+        // rpcPathReturnDepartmentArray();
 
         // 路径调用，返回 List<Department> 集合对象
-        rpcPathReturnDepartmentList(rpcClient);
+        rpcPathReturnDepartmentList();
     }
 
-    private static void rpcPathReturnDepartment(RpcClient rpcClient) {
-        Department department = rpcClient.get(MockRpcServer, "/department/get", Department.class, "技术部");
+    private static void rpcPathReturnDepartment() {
+        Department department = RpcClient.get(MockRpcClient, "/department/get", Department.class, "技术部");
         System.err.println("路径式同步调用5 =====> " + department);
 
-        rpcClient.get(MockRpcServer, "/department/get", Department.class, (data) -> {
+        RpcClient.get(MockRpcClient, "/department/get", Department.class, (data) -> {
             System.err.println("路径式异步调用6 =====> " + data);
         }, "技术部");
     }
 
 
-    private static void rpcPathReturnDepartmentArray(RpcClient rpcClient) {
-        Department[] departmentList = rpcClient.get(MockRpcServer, "/department/list", Department[].class);
+    private static void rpcPathReturnDepartmentArray() {
+        Department[] departmentList = RpcClient.get(MockRpcClient, "/department/list", Department[].class);
         for (Department dept : departmentList) {
             System.err.println("路径式同步调用7 =====> " + dept.getId() + "---" + dept.getName());
         }
 
-        rpcClient.get(MockRpcServer, "/department/list", Department[].class, (list) -> {
+        RpcClient.get(MockRpcClient, "/department/list", Department[].class, (list) -> {
             for (Department department : list) {
                 System.err.println("路径式异步调用8 =====> " + department.getId() + "---" + department.getName());
             }
@@ -324,8 +335,8 @@ public class MockRpcClient {
     }
 
 
-    private static void rpcPathReturnDepartmentList(RpcClient rpcClient) {
-        rpcClient.get(MockRpcServer, "/department/list", new ValueType<List<Department>>() {
+    private static void rpcPathReturnDepartmentList() {
+        RpcClient.get(MockRpcClient, "/department/list", new ValueType<List<Department>>() {
         }, (list) -> {
             for (Department department : list) {
                 System.err.println("路径式异步调用9 =====> " + department.getId() + "---" + department.getName());
@@ -336,7 +347,24 @@ public class MockRpcClient {
 }
 ```
 
-## 注意
+# 切换协议序列化方式
+
+RPC 框架支持 `Json` 和 `Hessian` 两种序列化方式，开发者可以通过修改配置的方式，自由切换序列化方式，无需改动代码文件。
+
+```yaml
+rpc:
+  client:
+    serialize: 1
+```
+
+配置文件中，`rpc.client.serialize` 属性为 RPC 实例支持的序列化方式，配置值和序列化对应方式如下：
+
+| 配置值 | 序列化方式 |
+| --- | --- |
+| 1 | Json | 
+| 2 | Hessian |
+
+# 注意
 
 1、rpc的调用规则为相同的包名调用，服务端和客户端的方法接口必须要在相同的包名下。
 
@@ -346,7 +374,7 @@ public class MockRpcClient {
 
 4、如果使用 Hessian 作为序列化工具，所有需要被序列化的实体类，都要实现 `java.io.Serializable` 接口，否则无法序列化。
 
-## 未来预期功能
+# 未来预期功能
 
 - 完整的 RPC 性能监控功能
 - 运行时 RPC 操作

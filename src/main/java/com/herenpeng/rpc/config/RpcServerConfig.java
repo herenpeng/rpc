@@ -16,6 +16,15 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class RpcServerConfig implements Serializable {
 
+    /**
+     * 服务端名称
+     */
+    @JsonProperty("name")
+    private String name;
+
+    /**
+     * 服务端启动端口
+     */
     @JsonProperty("port")
     private int port = 10000;
 

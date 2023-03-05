@@ -1,5 +1,6 @@
 package com.herenpeng.rpc;
 
+import com.herenpeng.rpc.annotation.RpcApplication;
 import com.herenpeng.rpc.bean.Department;
 import com.herenpeng.rpc.bean.User;
 import com.herenpeng.rpc.client.RpcClient;
@@ -12,20 +13,18 @@ import java.util.List;
 
 /**
  * @author herenpeng
- * @since 2021-08-30 22:45
+ * @since 2023-03-05 10:57
  */
-public class MockRpcClient {
+@RpcApplication
+public class MockRpc {
+    private static final String MockRpcClient = "MockRpcClient";
 
-    private static final String MockRpcServer = "MockRpcServer";
-
-    public static void main(String[] args) throws InterruptedException {
-        // 创建客户端并调用方法
-        RpcClient rpcClient = new RpcClient();
-        rpcClient.register(MockRpcServer, "127.0.0.1", 10000, MockRpcClient.class);
+    public static void main(String[] args) throws Exception {
+        RpcRunner.run(MockRpc.class, args);
 
         Thread.sleep(1500);
 
-        UserService userService = rpcClient.createRpc(MockRpcServer, UserService.class);
+        UserService userService = RpcClient.createRpc(MockRpcClient, UserService.class);
 
         // 服务代理调用，返回 User 对象
         rpcServerProxyReturnUser(userService);
@@ -34,13 +33,13 @@ public class MockRpcClient {
         rpcServerProxyReturnUserList(userService);
 
         // 路径调用，返回 Department 对象
-        rpcPathReturnDepartment(rpcClient);
+        rpcPathReturnDepartment();
 
         // 路径调用，返回 Department[] 数组对象
         // rpcPathReturnDepartmentArray(rpcClient);
 
         // 路径调用，返回 List<Department> 集合对象
-        rpcPathReturnDepartmentList(rpcClient);
+        rpcPathReturnDepartmentList();
 
         // 服务代理调用，传递参数是 User 对象
         rpcServerProxyParamUser(userService);
@@ -94,24 +93,24 @@ public class MockRpcClient {
         }
     }
 
-    private static void rpcPathReturnDepartment(RpcClient rpcClient) {
-        Department department = rpcClient.get(MockRpcServer, "/department/get", Department.class, "技术部");
+    private static void rpcPathReturnDepartment() {
+        Department department = RpcClient.get(MockRpcClient, "/department/get", Department.class, "技术部");
         System.err.println("路径式同步调用5 =====> " + department);
 
-        rpcClient.get(MockRpcServer, "/department/get", Department.class, (data) -> {
+        RpcClient.get(MockRpcClient, "/department/get", Department.class, (data) -> {
             System.err.println("路径式异步调用6 =====> " + data);
         }, "技术部");
     }
 
 
-    private static void rpcPathReturnDepartmentArray(RpcClient rpcClient) {
+    private static void rpcPathReturnDepartmentArray() {
         // 如果使用Hessian，这个方法序列化会失败，因为 /department/list 这个接口返回的是一个 ArrayList<Department> 对象，序列化为数组会失败，但是 Json 则可以成功
-        Department[] departmentList = rpcClient.get(MockRpcServer, "/department/list", Department[].class);
+        Department[] departmentList = RpcClient.get(MockRpcClient, "/department/list", Department[].class);
         for (Department dept : departmentList) {
             System.err.println("路径式同步调用7 =====> " + dept.getId() + "---" + dept.getName());
         }
 
-        rpcClient.get(MockRpcServer, "/department/list", Department[].class, (list) -> {
+        RpcClient.get(MockRpcClient, "/department/list", Department[].class, (list) -> {
             for (Department department : list) {
                 System.err.println("路径式异步调用8 =====> " + department.getId() + "---" + department.getName());
             }
@@ -119,8 +118,8 @@ public class MockRpcClient {
     }
 
 
-    private static void rpcPathReturnDepartmentList(RpcClient rpcClient) {
-        rpcClient.get(MockRpcServer, "/department/list", new ValueType<List<Department>>() {
+    private static void rpcPathReturnDepartmentList() {
+        RpcClient.get(MockRpcClient, "/department/list", new ValueType<List<Department>>() {
         }, (list) -> {
             for (Department department : list) {
                 System.err.println("路径式异步调用9 =====> " + department.getId() + "---" + department.getName());
