@@ -1,14 +1,9 @@
 package com.herenpeng.rpc.server;
 
-import com.herenpeng.rpc.annotation.RpcApplication;
-import com.herenpeng.rpc.annotation.RpcService;
 import com.herenpeng.rpc.common.RpcMethodInvoke;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcConfig;
-import com.herenpeng.rpc.config.RpcConfigProcessor;
 import com.herenpeng.rpc.config.RpcServerConfig;
-import com.herenpeng.rpc.exception.RpcException;
-import com.herenpeng.rpc.kit.ClassScanner;
 import com.herenpeng.rpc.kit.StringUtils;
 import com.herenpeng.rpc.kit.thread.RpcThreadFactory;
 import com.herenpeng.rpc.protocol.ProtocolDecoder;
@@ -21,6 +16,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
@@ -31,6 +27,7 @@ import java.util.List;
 /**
  * @author herenpeng
  */
+@Getter
 @Slf4j
 public class RpcServer {
 
@@ -41,6 +38,7 @@ public class RpcServer {
     private RpcConfig config;
     private RpcServerConfig serverConfig;
     private RpcServerCache cache;
+    private String name;
 
 
     public RpcServer() {
@@ -52,27 +50,24 @@ public class RpcServer {
      *
      * @param rpcApplicationClass 需要扫描的Root类
      */
-    public void start(Class<?> rpcApplicationClass, RpcConfig rpcConfig) {
-        log.info("[RPC服务端]正在初始化");
+    public void start(Class<?> rpcApplicationClass, RpcConfig rpcConfig, List<Class<?>> classList) {
         long start = System.currentTimeMillis();
         this.config = rpcConfig;
-        this.serverConfig = this.config == null ? new RpcServerConfig() : this.config.getServer();
+        this.serverConfig = rpcConfig.getServer();
+        this.name = serverConfig.getName();
+        log.info("[RPC服务端]{}：正在初始化", name);
         // 初始化rpc缓存
-        initRpcCache(rpcApplicationClass);
+        initRpcCache(classList);
         // 初始化rpc服务端
         initRpcServer(serverConfig.getPort());
         long end = System.currentTimeMillis();
-        log.info("[RPC服务端]初始化完成，端口：{}，共耗时{}毫秒", serverConfig.getPort(), end - start);
+        log.info("[RPC服务端]{}：初始化完成，端口：{}，共耗时{}毫秒", name, serverConfig.getPort(), end - start);
     }
 
-    private void initRpcCache(Class<?> rpcApplicationClass) {
+    private void initRpcCache(List<Class<?>> classList) {
         cache = new RpcServerCache();
-        String packageName = rpcApplicationClass.getPackageName();
-        ClassScanner scanner = new ClassScanner(packageName);
-        List<Class<?>> classList = scanner.listClass();
-
         cache.initMethodInvoke(classList);
-        log.info("[RPC服务端]缓存初始化完成");
+        log.info("[RPC服务端]{}：缓存初始化完成", name);
     }
 
     private void initRpcServer(int port) {
@@ -112,14 +107,14 @@ public class RpcServer {
         RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence(), request.getSerialize());
         ctx.writeAndFlush(response);
         if (this.serverConfig.isHeartbeatLogEnable()) {
-            log.info("[RPC服务端]接收心跳消息，消息序列号：{}", response.getSequence());
+            log.info("[RPC服务端]{}：接收心跳消息，消息序列号：{}", name, response.getSequence());
         }
     }
 
 
     public RpcResponse invoke(RpcRequest<?> request) {
         if (request == null) {
-            throw new IllegalArgumentException("[RPC服务端]request不允许为null");
+            throw new IllegalArgumentException("[RPC服务端]" + name + "：request不允许为null");
         }
         RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence(), request.getSerialize());
         try {
@@ -131,7 +126,7 @@ public class RpcServer {
             Object returnData = method.invoke(rpcServer, params);
             response.setReturnData(returnData);
         } catch (Exception e) {
-            log.error("[RPC服务端]服务端执行方法发生异常：{}", request);
+            log.error("[RPC服务端]{}：服务端执行方法发生异常：{}", name, request);
             Throwable exception = e;
             if (e instanceof InvocationTargetException) {
                 exception = ((InvocationTargetException) e).getTargetException();

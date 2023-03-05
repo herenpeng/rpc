@@ -7,6 +7,7 @@ import com.herenpeng.rpc.kit.ValueType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Proxy;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,8 +19,8 @@ public class RpcClient {
 
     private static final Map<String, RpcServerProxy> rpcServerProxyMap = new ConcurrentHashMap<>();
 
-    public void start(Class<?> rpcApplicationClass, RpcConfig rpcConfig) {
-        RpcServerProxy rpcServerProxy = new RpcServerProxy(rpcApplicationClass, rpcConfig);
+    public void start(Class<?> rpcApplicationClass, RpcConfig rpcConfig, List<Class<?>> classList) {
+        RpcServerProxy rpcServerProxy = new RpcServerProxy(rpcApplicationClass, rpcConfig, classList);
         rpcServerProxyMap.put(rpcServerProxy.getName(), rpcServerProxy);
     }
 

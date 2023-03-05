@@ -27,6 +27,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 /**
  * @author herenpeng
@@ -61,7 +62,7 @@ public class RpcServerProxy implements InvocationHandler {
     }
 
 
-    public RpcServerProxy(Class<?> rpcApplicationClass, RpcConfig rpcConfig) {
+    public RpcServerProxy(Class<?> rpcApplicationClass, RpcConfig rpcConfig, List<Class<?>> classList) {
         this.config = rpcConfig;
         this.clientConfig = this.config.getClient();
         log.info("[RPC客户端]{}：正在初始化", clientConfig.getName());
@@ -70,15 +71,13 @@ public class RpcServerProxy implements InvocationHandler {
         this.name = clientConfig.getName();
         this.host = clientConfig.getHost();
         this.port = clientConfig.getPort();
-        init(rpcApplicationClass);
+        init(classList);
     }
 
-    public void init(Class<?> rpcScannerClass) {
+    public void init(List<Class<?>> classList) {
         long start = System.currentTimeMillis();
-        // 初始化客户端配置
-        // initRpcConfig();
         // 初始化客户端缓存
-        initRpcClientCache(rpcScannerClass);
+        initRpcClientCache(classList);
         // 初始化服务端代理
         initRpcServerProxy();
         // 初始化定时任务
@@ -87,19 +86,11 @@ public class RpcServerProxy implements InvocationHandler {
         log.info("[RPC客户端]{}：初始化完成，已创建{}服务代理，主机：{}，端口：{}，共耗时{}毫秒", name, name, host, port, end - start);
     }
 
-    // private void initRpcConfig() {
-    //     RpcConfigProcessor processor = new RpcConfigProcessor("rpc.yaml");
-    //     this.config = processor.getRpc();
-    //     this.clientConfig = this.config == null ? new RpcClientConfig() : this.config.getClient();
-    //     log.info("[RPC客户端]{}：配置初始化完成，配置信息：{}", name, config);
-    // }
 
-    private void initRpcClientCache(Class<?> rpcScannerClass) {
+    private void initRpcClientCache(List<Class<?>> classList) {
         this.cache = new RpcClientCache();
-        String packageName = rpcScannerClass.getPackageName();
-        ClassScanner scanner = new ClassScanner(packageName, (clazz) -> clazz.getAnnotation(RpcApi.class) != null);
-        List<Class<?>> classList = scanner.listClass();
-        this.cache.initMethodLocator(classList);
+        List<Class<?>> list = classList.stream().filter(clazz -> clazz.getAnnotation(RpcApi.class) != null).collect(Collectors.toList());
+        this.cache.initMethodLocator(list);
         log.info("[RPC客户端]{}：缓存初始化完成", name);
     }
 
@@ -228,19 +219,19 @@ public class RpcServerProxy implements InvocationHandler {
     private <T> void checkCallback(int sequence, RpcResponse response) {
         RpcInfo<T> rpcInfo = callbackEvents.remove(sequence);
         if (rpcInfo == null) {
-            log.error("[RPC客户端]RPC请求未注册回调事件，消息序列号：{}", sequence);
+            log.error("[RPC客户端]{}：RPC请求未注册回调事件，消息序列号：{}", name, sequence);
             return;
         }
         // 记录响应数据
         rpcInfo.setResponse(response);
         if (StringUtils.isNotEmpty(response.getException())) {
             invokeEnd(rpcInfo, false);
-            throw new RpcException("[RPC客户端]RPC服务端响应异常信息：" + response.getException());
+            throw new RpcException("[RPC客户端]" + name + "：RPC服务端响应异常信息：" + response.getException());
         }
         RpcRequest<T> request = rpcInfo.getRequest();
         RpcCallback<T> callback = request.getCallable();
         if (callback == null) {
-            log.error("[RPC客户端]异步请求回调函数为空，请求序列号：{}", request.getSequence());
+            log.error("[RPC客户端]{}：异步请求回调函数为空，请求序列号：{}", name, request.getSequence());
             return;
         }
         T returnData = response.getReturnData(request.getReturnType());
