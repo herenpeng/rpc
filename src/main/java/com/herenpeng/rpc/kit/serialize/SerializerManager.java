@@ -17,6 +17,7 @@ public class SerializerManager {
         // 初始化该管理类的时候注册所有协议版本，这些都是内置的版本号
         serializers.put(Serializer.JSON, new JsonSerializer());
         serializers.put(Serializer.HESSIAN, new HessianSerializer());
+        serializers.put(Serializer.KRYO, new KryoSerializer());
     }
 
     /**

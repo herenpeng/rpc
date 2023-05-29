@@ -26,10 +26,8 @@ public class HessianSerializer implements Serializer {
 
     @Override
     public byte[] serialize(final Object data) {
-        ByteArrayOutputStream os;
         Hessian2Output out = null;
-        try {
-            os = new ByteArrayOutputStream();
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
             out = new Hessian2Output(os);
             out.writeObject(data);
             out.flush();
@@ -50,10 +48,8 @@ public class HessianSerializer implements Serializer {
 
     @Override
     public <T> T deserialize(final byte[] bytes, Type valueType) {
-        ByteArrayInputStream is;
         Hessian2Input in = null;
-        try {
-            is = new ByteArrayInputStream(bytes);
+        try (ByteArrayInputStream is = new ByteArrayInputStream(bytes)) {
             in = new Hessian2Input(is);
             return (T) in.readObject();
         } catch (Exception e) {

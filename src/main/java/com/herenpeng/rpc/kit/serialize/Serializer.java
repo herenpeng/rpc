@@ -12,6 +12,7 @@ public interface Serializer {
 
     byte JSON = 1;
     byte HESSIAN = 2;
+    byte KRYO = 3;
 
     /**
      * 序列化方法的唯一ID
