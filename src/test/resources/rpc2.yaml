@@ -1,6 +1,6 @@
 rpc:
   client:
-    name: MockRpcClient
+    name: MockRpcClient2
     host: 127.0.0.1
     port: 10000
     sync-timeout: 1000
@@ -10,8 +10,3 @@ rpc:
     serialize: 1
     heartbeat-log-enable: false
     monitor-log-enable: true
-  server:
-    name: MockRpcServer
-    port: 10000
-    heartbeat-log-enable: false
-    worker-thread-num: 3

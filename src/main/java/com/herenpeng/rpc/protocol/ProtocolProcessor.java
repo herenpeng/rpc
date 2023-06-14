@@ -14,6 +14,7 @@ public interface ProtocolProcessor {
     /**
      * 解码处理
      *
+     * @param in 缓冲区对象
      * @return
      */
     Protocol decode(ByteBuf in);

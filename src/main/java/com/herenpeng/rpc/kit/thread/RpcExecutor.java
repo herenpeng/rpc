@@ -11,8 +11,8 @@ public class RpcExecutor {
      * 单线程池
      */
     private static final ExecutorService service = new ThreadPoolExecutor(
-            1,
-            1,
+            3,
+            5,
             0L,
             TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>(1),

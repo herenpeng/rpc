@@ -1,10 +1,12 @@
 package com.herenpeng.rpc.server;
 
+import com.herenpeng.rpc.client.RpcServerProxy;
 import com.herenpeng.rpc.common.RpcMethodInvoke;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.config.RpcServerConfig;
 import com.herenpeng.rpc.kit.StringUtils;
+import com.herenpeng.rpc.kit.thread.RpcExecutor;
 import com.herenpeng.rpc.kit.thread.RpcThreadFactory;
 import com.herenpeng.rpc.protocol.ProtocolDecoder;
 import com.herenpeng.rpc.protocol.ProtocolEncoder;
@@ -23,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.concurrent.FutureTask;
 
 /**
  * @author herenpeng
@@ -39,10 +42,15 @@ public class RpcServer {
     private RpcServerConfig serverConfig;
     private RpcServerCache cache;
     private String name;
+    /**
+     * rpc性能数据监控对象
+     */
+    private RpcServerPerformanceData performanceData;
 
 
     public RpcServer() {
         this.instance = this;
+        performanceData = new RpcServerPerformanceData();
     }
 
     /**
@@ -62,6 +70,8 @@ public class RpcServer {
         initRpcServer(serverConfig.getPort());
         long end = System.currentTimeMillis();
         log.info("[RPC服务端]{}：初始化完成，端口：{}，共耗时{}毫秒", name, serverConfig.getPort(), end - start);
+        performanceData.setStartTime(start);
+        performanceData.setStartSuccessTime(end);
     }
 
     private void initRpcCache(List<Class<?>> classList) {
@@ -75,7 +85,7 @@ public class RpcServer {
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         // 2.定义执行线程组
         EventLoopGroup bossGroup = new NioEventLoopGroup(new RpcThreadFactory(RpcServer.class.getSimpleName() + "-boss"));
-        EventLoopGroup workerGroup = new NioEventLoopGroup(new RpcThreadFactory(RpcServer.class.getSimpleName() + "-worker"));
+        EventLoopGroup workerGroup = new NioEventLoopGroup(serverConfig.getWorkerThreadNum(), new RpcThreadFactory(RpcServer.class.getSimpleName() + "-worker"));
         // 3.设置线程池
         serverBootstrap.group(bossGroup, workerGroup);
         // 4.设置通道
@@ -113,6 +123,7 @@ public class RpcServer {
 
 
     public RpcResponse invoke(RpcRequest<?> request) {
+        performanceData.setRequestNum(performanceData.getRequestNum() + 1);
         if (request == null) {
             throw new IllegalArgumentException("[RPC服务端]" + name + "：request不允许为null");
         }
@@ -125,6 +136,7 @@ public class RpcServer {
             // 执行方法
             Object returnData = method.invoke(rpcServer, params);
             response.setReturnData(returnData);
+            performanceData.setSuccessNum(performanceData.getSuccessNum() + 1);
         } catch (Exception e) {
             log.error("[RPC服务端]{}：服务端执行方法发生异常：{}", name, request);
             Throwable exception = e;
@@ -135,6 +147,7 @@ public class RpcServer {
                 response.setException(exception.getMessage());
                 exception.printStackTrace();
             }
+            performanceData.setExceptionNum(performanceData.getExceptionNum() + 1);
         }
         return response;
     }
