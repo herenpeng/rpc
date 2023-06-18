@@ -1,12 +1,10 @@
 package com.herenpeng.rpc.server;
 
-import com.herenpeng.rpc.client.RpcServerProxy;
 import com.herenpeng.rpc.common.RpcMethodInvoke;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.config.RpcServerConfig;
 import com.herenpeng.rpc.kit.StringUtils;
-import com.herenpeng.rpc.kit.thread.RpcExecutor;
 import com.herenpeng.rpc.kit.thread.RpcThreadFactory;
 import com.herenpeng.rpc.protocol.ProtocolDecoder;
 import com.herenpeng.rpc.protocol.ProtocolEncoder;
@@ -25,7 +23,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author herenpeng
@@ -45,7 +46,8 @@ public class RpcServer {
     /**
      * rpc性能数据监控对象
      */
-    private RpcServerPerformanceData performanceData;
+    private final RpcServerPerformanceData performanceData;
+    private ExecutorService service;
 
 
     public RpcServer() {
@@ -58,10 +60,9 @@ public class RpcServer {
      *
      * @param rpcApplicationClass 需要扫描的Root类
      */
-    public void start(Class<?> rpcApplicationClass, RpcConfig rpcConfig, List<Class<?>> classList) {
+    public void start(Class<?> rpcApplicationClass, RpcServerConfig serverConfig, List<Class<?>> classList) {
         long start = System.currentTimeMillis();
-        this.config = rpcConfig;
-        this.serverConfig = rpcConfig.getServer();
+        this.serverConfig = serverConfig;
         this.name = serverConfig.getName();
         log.info("[RPC服务端]{}：正在初始化", name);
         // 初始化rpc缓存
@@ -70,8 +71,7 @@ public class RpcServer {
         initRpcServer(serverConfig.getPort());
         long end = System.currentTimeMillis();
         log.info("[RPC服务端]{}：初始化完成，端口：{}，共耗时{}毫秒", name, serverConfig.getPort(), end - start);
-        performanceData.setStartTime(start);
-        performanceData.setStartSuccessTime(end);
+        performanceData.setStartUpTime(end);
     }
 
     private void initRpcCache(List<Class<?>> classList) {
@@ -110,6 +110,13 @@ public class RpcServer {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        service = new ThreadPoolExecutor(
+                serverConfig.getExecutorThreadNum(),
+                serverConfig.getExecutorThreadMaxNum(),
+                serverConfig.getExecutorThreadKeepAliveTime(),
+                TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(serverConfig.getExecutorThreadBlockingQueueSize()),
+                new RpcThreadFactory(RpcServer.class.getSimpleName() + "-executor"));
     }
 
 
@@ -122,34 +129,37 @@ public class RpcServer {
     }
 
 
-    public RpcResponse invoke(RpcRequest<?> request) {
+    public void invoke(RpcRequest<?> request, ChannelHandlerContext ctx) {
         performanceData.setRequestNum(performanceData.getRequestNum() + 1);
         if (request == null) {
             throw new IllegalArgumentException("[RPC服务端]" + name + "：request不允许为null");
         }
-        RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence(), request.getSerialize());
-        try {
-            RpcMethodInvoke methodInvoke = getRpcMethodInvoke(request);
-            Object rpcServer = methodInvoke.getRpcServer();
-            Method method = methodInvoke.getMethod();
-            Object[] params = request.getParams(method.getGenericParameterTypes());
-            // 执行方法
-            Object returnData = method.invoke(rpcServer, params);
-            response.setReturnData(returnData);
-            performanceData.setSuccessNum(performanceData.getSuccessNum() + 1);
-        } catch (Exception e) {
-            log.error("[RPC服务端]{}：服务端执行方法发生异常：{}", name, request);
-            Throwable exception = e;
-            if (e instanceof InvocationTargetException) {
-                exception = ((InvocationTargetException) e).getTargetException();
+        service.execute(() -> {
+            RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence(), request.getSerialize());
+            try {
+                RpcMethodInvoke methodInvoke = getRpcMethodInvoke(request);
+                Object rpcServer = methodInvoke.getRpcServer();
+                Method method = methodInvoke.getMethod();
+                Object[] params = request.getParams(method.getGenericParameterTypes());
+                // 执行方法
+                Object returnData = method.invoke(rpcServer, params);
+                response.setReturnData(returnData);
+                performanceData.setSuccessNum(performanceData.getSuccessNum() + 1);
+            } catch (Exception e) {
+                log.error("[RPC服务端]{}：服务端执行方法发生异常：{}", name, request);
+                Throwable exception = e;
+                if (e instanceof InvocationTargetException) {
+                    exception = ((InvocationTargetException) e).getTargetException();
+                }
+                if (exception != null) {
+                    response.setException(exception.getMessage());
+                    exception.printStackTrace();
+                }
+                performanceData.setExceptionNum(performanceData.getExceptionNum() + 1);
             }
-            if (exception != null) {
-                response.setException(exception.getMessage());
-                exception.printStackTrace();
-            }
-            performanceData.setExceptionNum(performanceData.getExceptionNum() + 1);
-        }
-        return response;
+            ctx.writeAndFlush(response);
+            log.info("[RPC服务端]{}：响应RPC请求消息，消息序列号：{}", name, request.getSequence());
+        });
     }
 
 

@@ -88,7 +88,37 @@ rpc:
 
 - 如果需要同时启动一个 RPC 服务端和一个 RPC 客户端，那么只需要将两份配置合并即可。
 
-- 如果需要启动多个 RPC 服务端或者多个 RPC 客户端，则可以创建多份配置文件，并通过注解 `@RpcApplication` 中的属性 `configFiles()` 来标识多份需要实例化的配置文件。
+- 如果需要启动多个 RPC 服务端或者多个 RPC 客户端，则可以使用 `clients` 和 `servers` 属性，这两个属性是集合对象，可以配置多个 RPC 实例。
+
+```yaml
+rpc:
+  clients:
+    - name: MockRpcClient
+      host: 127.0.0.1
+      port: 10000
+      sync-timeout: 1000
+      reconnection-time: 1000
+      heartbeat-time: 10000
+      heartbeat-invalid-times: 3
+      serialize: 1
+      heartbeat-log-enable: false
+      monitor-log-enable: true
+    - name: MockRpcClient2
+      host: 127.0.0.1
+      port: 10000
+      sync-timeout: 1000
+      reconnection-time: 1000
+      heartbeat-time: 10000
+      heartbeat-invalid-times: 3
+      serialize: 1
+      heartbeat-log-enable: false
+      monitor-log-enable: true
+  servers:
+    - name: MockRpcServer
+      port: 10000
+      heartbeat-log-enable: false
+      worker-thread-num: 3
+```
 
 ## 初始化RPC实例
 

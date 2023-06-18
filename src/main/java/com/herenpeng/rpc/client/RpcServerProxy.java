@@ -62,9 +62,9 @@ public class RpcServerProxy implements InvocationHandler {
     }
 
 
-    public RpcServerProxy(Class<?> rpcApplicationClass, RpcConfig rpcConfig, List<Class<?>> classList) {
-        this.config = rpcConfig;
-        this.clientConfig = this.config.getClient();
+    public RpcServerProxy(Class<?> rpcApplicationClass, RpcClientConfig clientConfig, List<Class<?>> classList) {
+        // this.config = rpcConfig;
+        this.clientConfig = clientConfig;
         log.info("[RPC客户端]{}：正在初始化", clientConfig.getName());
         // 获取对应的远端配置
         this.instance = this;

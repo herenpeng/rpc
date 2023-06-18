@@ -12,6 +12,6 @@ import java.lang.annotation.*;
 @Documented
 public @interface RpcApplication {
 
-    String[] configFiles() default {"rpc.yaml"};
+    String value() default "rpc.yaml";
 
 }

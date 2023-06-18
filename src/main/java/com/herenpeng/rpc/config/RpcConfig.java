@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * @author herenpeng
@@ -19,6 +20,10 @@ public class RpcConfig implements Serializable {
 
     private RpcClientConfig client;
 
+    private List<RpcClientConfig> clients;
+
     private RpcServerConfig server;
+
+    private List<RpcServerConfig> servers;
 
 }

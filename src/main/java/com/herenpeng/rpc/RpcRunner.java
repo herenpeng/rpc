@@ -5,7 +5,6 @@ import com.herenpeng.rpc.client.RpcClient;
 import com.herenpeng.rpc.config.*;
 import com.herenpeng.rpc.exception.RpcException;
 import com.herenpeng.rpc.kit.ClassScanner;
-import com.herenpeng.rpc.kit.StringUtils;
 import com.herenpeng.rpc.server.RpcServer;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,19 +24,42 @@ public class RpcRunner {
         ClassScanner scanner = new ClassScanner(packageName);
         List<Class<?>> classList = scanner.listClass();
         // 解析配置文件
-        String[] configFiles = application.configFiles();
+        String configFile = application.value();
         // 一份配置默认启动一个 Rpc 实例
-        for (String configFile : configFiles) {
-            RpcConfig rpcConfig = initRpcConfig(configFile);
-            if (checkStartServer(rpcConfig)) {
-                // 启动 RPC 服务端
+        RpcConfig rpcConfig = initRpcConfig(configFile);
+        rpcServerStart(rpcApplicationClass, classList, rpcConfig);
+        rpcClientStart(rpcApplicationClass, classList, rpcConfig);
+    }
+
+    private static void rpcServerStart(Class<?> rpcApplicationClass, List<Class<?>> classList, RpcConfig rpcConfig) {
+        RpcServerConfig server = rpcConfig.getServer();
+        if (server != null) {
+            RpcServer rpcServer = new RpcServer();
+            rpcServer.start(rpcApplicationClass, server, classList);
+        }
+        List<RpcServerConfig> serverConfigs = rpcConfig.getServers();
+        if (serverConfigs != null) {
+            // 启动 RPC 服务端
+            for (RpcServerConfig serverConfig : serverConfigs) {
                 RpcServer rpcServer = new RpcServer();
-                rpcServer.start(rpcApplicationClass, rpcConfig, classList);
+                rpcServer.start(rpcApplicationClass, serverConfig, classList);
             }
-            if (checkStartClient(rpcConfig)) {
-                // 启动 RPC 客户端
+        }
+    }
+
+
+    private static void rpcClientStart(Class<?> rpcApplicationClass, List<Class<?>> classList, RpcConfig rpcConfig) {
+        RpcClientConfig client = rpcConfig.getClient();
+        if (client != null) {
+            RpcClient rpcClient = new RpcClient();
+            rpcClient.start(rpcApplicationClass, client, classList);
+        }
+        List<RpcClientConfig> clientConfigs = rpcConfig.getClients();
+        if (clientConfigs != null) {
+            // 启动 RPC 客户端
+            for (RpcClientConfig clientConfig : clientConfigs) {
                 RpcClient rpcClient = new RpcClient();
-                rpcClient.start(rpcApplicationClass, rpcConfig, classList);
+                rpcClient.start(rpcApplicationClass, clientConfig, classList);
             }
         }
     }
@@ -62,30 +84,6 @@ public class RpcRunner {
             throw new RpcException("[RPC启动]RPC启动类 @RpcApplication 注解为空");
         }
         return application;
-    }
-
-
-    private static boolean checkStartServer(RpcConfig rpcConfig) {
-        if (rpcConfig == null || rpcConfig.getServer() == null) {
-            return false;
-        }
-        RpcServerConfig serverConfig = rpcConfig.getServer();
-        return serverConfig.getPort() > 0;
-    }
-
-    /**
-     * 检测是否启动客户端的配置
-     *
-     * @return 是否启动并注册一个客户端实例
-     */
-    private static boolean checkStartClient(RpcConfig rpcConfig) {
-        if (rpcConfig == null || rpcConfig.getClient() == null) {
-            return false;
-        }
-        RpcClientConfig clientConfig = rpcConfig.getClient();
-        return StringUtils.isNotEmpty(clientConfig.getName()) &&
-                StringUtils.isNotEmpty(clientConfig.getHost()) &&
-                clientConfig.getPort() > 0;
     }
 
 

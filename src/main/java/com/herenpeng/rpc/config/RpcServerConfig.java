@@ -40,4 +40,19 @@ public class RpcServerConfig implements Serializable {
     @JsonProperty("worker-thread-num")
     private int workerThreadNum = 0;
 
+    /**
+     * 具体执行的线程数量
+     */
+    @JsonProperty("executor-thread-num")
+    private int executorThreadNum = 1;
+
+    @JsonProperty("executor-thread-max-num")
+    private int executorThreadMaxNum = 1;
+
+    @JsonProperty("executor-thread-keep-alive-time")
+    private long executorThreadKeepAliveTime;
+
+    @JsonProperty("executor-thread-blocking-queue-size")
+    private int executorThreadBlockingQueueSize = 1;
+
 }

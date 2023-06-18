@@ -1,5 +1,6 @@
 package com.herenpeng.rpc.client;
 
+import com.herenpeng.rpc.config.RpcClientConfig;
 import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.exception.RpcException;
 import com.herenpeng.rpc.kit.RpcCallback;
@@ -19,8 +20,8 @@ public class RpcClient {
 
     private static final Map<String, RpcServerProxy> rpcServerProxyMap = new ConcurrentHashMap<>();
 
-    public void start(Class<?> rpcApplicationClass, RpcConfig rpcConfig, List<Class<?>> classList) {
-        RpcServerProxy rpcServerProxy = new RpcServerProxy(rpcApplicationClass, rpcConfig, classList);
+    public void start(Class<?> rpcApplicationClass, RpcClientConfig clientConfig, List<Class<?>> classList) {
+        RpcServerProxy rpcServerProxy = new RpcServerProxy(rpcApplicationClass, clientConfig, classList);
         rpcServerProxyMap.put(rpcServerProxy.getName(), rpcServerProxy);
     }
 

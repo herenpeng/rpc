@@ -15,7 +15,7 @@ import java.util.List;
  * @author herenpeng
  * @since 2023-03-05 10:57
  */
-@RpcApplication(configFiles = {"rpc.yaml", "rpc2.yaml"})
+@RpcApplication()
 public class MockRpc {
     private static final String MockRpcClient = "MockRpcClient";
     private static final String MockRpcClient2 = "MockRpcClient2";
@@ -30,7 +30,7 @@ public class MockRpc {
 
         // 服务代理调用，返回 User 对象
         rpcServerProxyReturnUser(userService);
-        // rpcServerProxyReturnUser(userService2);
+        rpcServerProxyReturnUser(userService2);
 
         // 服务代理调用，返回 List<User> 对象
         rpcServerProxyReturnUserList(userService);
@@ -98,8 +98,10 @@ public class MockRpc {
         list.add(new User(20, "小王", false, 28, new Date(), new Date(), new Date()));
         list.add(new User(21, "小周", false, 35, new Date(), new Date(), new Date()));
         List<User> userList = userService.updateUsers(list);
-        for (User user : userList) {
-            System.err.println("同步调用11 =====> " + user.getId() + " --- " + user.getUsername());
+        if (userList != null) {
+            for (User user : userList) {
+                System.err.println("同步调用11 =====> " + user.getId() + " --- " + user.getUsername());
+            }
         }
     }
 

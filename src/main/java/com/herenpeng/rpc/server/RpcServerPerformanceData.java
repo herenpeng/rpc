@@ -20,11 +20,7 @@ public class RpcServerPerformanceData implements Serializable {
     /**
      * 服务启动时间（毫秒）
      */
-    private long startTime;
-    /**
-     * 启动耗时（毫秒）
-     */
-    private long startSuccessTime;
+    private long startUpTime;
 
     private int requestNum;
     private int successNum;

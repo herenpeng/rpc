@@ -1,17 +1,31 @@
 rpc:
-  client:
-    name: MockRpcClient
-    host: 127.0.0.1
-    port: 10000
-    sync-timeout: 1000
-    reconnection-time: 1000
-    heartbeat-time: 10000
-    heartbeat-invalid-times: 3
-    serialize: 1
-    heartbeat-log-enable: false
-    monitor-log-enable: true
-  server:
-    name: MockRpcServer
-    port: 10000
-    heartbeat-log-enable: false
-    worker-thread-num: 3
+  clients:
+    - name: MockRpcClient
+      host: 127.0.0.1
+      port: 10000
+      sync-timeout: 1000
+      reconnection-time: 1000
+      heartbeat-time: 10000
+      heartbeat-invalid-times: 3
+      serialize: 1
+      heartbeat-log-enable: false
+      monitor-log-enable: true
+    - name: MockRpcClient2
+      host: 127.0.0.1
+      port: 10000
+      sync-timeout: 1000
+      reconnection-time: 1000
+      heartbeat-time: 10000
+      heartbeat-invalid-times: 3
+      serialize: 1
+      heartbeat-log-enable: false
+      monitor-log-enable: true
+  servers:
+    - name: MockRpcServer
+      port: 10000
+      heartbeat-log-enable: false
+      worker-thread-num: 3
+      executor-thread-num: 3
+      executor-thread-max-num: 5
+      executor-thread-keep-alive-time: 10
+      executor-thread-blocking-queue-size: 3
