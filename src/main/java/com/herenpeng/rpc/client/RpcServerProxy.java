@@ -48,7 +48,7 @@ public class RpcServerProxy implements InvocationHandler {
     private RpcClientConfig clientConfig;
     private RpcClientCache cache;
 
-    private final Map<Integer, CountDownLatch> lockMap = new ConcurrentHashMap<>();
+    private final Map<Integer, CountDownLatch> syncLockMap = new ConcurrentHashMap<>();
     private final Map<Integer, RpcResponse> responseEvents = new ConcurrentHashMap<>();
     /**
      * 异步请求回调事件
@@ -62,7 +62,7 @@ public class RpcServerProxy implements InvocationHandler {
         } else {
             // 同步锁
             responseEvents.put(sequence, response);
-            CountDownLatch latch = lockMap.remove(sequence);
+            CountDownLatch latch = syncLockMap.remove(sequence);
             if (latch != null) {
                 latch.countDown();
             }
@@ -195,10 +195,10 @@ public class RpcServerProxy implements InvocationHandler {
             this.session.writeAndFlush(request);
             return null;
         }
-        this.session.writeAndFlush(request);
         // 同步调用
         CountDownLatch latch = new CountDownLatch(1);
-        lockMap.put(request.getSequence(), latch);
+        syncLockMap.put(request.getSequence(), latch);
+        this.session.writeAndFlush(request);
         try {
             boolean await = latch.await(clientConfig.getSyncTimeout(), TimeUnit.MILLISECONDS);
             if (await) {
