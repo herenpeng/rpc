@@ -18,11 +18,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUserInfo(String name) {
-        try {
-            Thread.sleep(10000L);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         return new User(15, name, true, 18, new Date(), new Date(), new Date());
     }
 

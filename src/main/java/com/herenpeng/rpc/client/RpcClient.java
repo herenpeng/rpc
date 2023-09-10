@@ -1,7 +1,6 @@
 package com.herenpeng.rpc.client;
 
 import com.herenpeng.rpc.config.RpcClientConfig;
-import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.exception.RpcException;
 import com.herenpeng.rpc.kit.RpcCallback;
 import com.herenpeng.rpc.kit.ValueType;

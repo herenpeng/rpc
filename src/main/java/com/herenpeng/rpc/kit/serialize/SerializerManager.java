@@ -27,6 +27,9 @@ public class SerializerManager {
         if (serializer == null) {
             throw new RpcException("[RPC工具]注册的序列化工具对象不能为空");
         }
+        if (serializers.containsKey(serializer.getId())) {
+            throw new RpcException("[RPC工具]序列化工具已注册，请勿重复注册");
+        }
         serializers.put(serializer.getId(), serializer);
     }
 

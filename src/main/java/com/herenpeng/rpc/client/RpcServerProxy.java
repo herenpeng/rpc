@@ -27,6 +27,8 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +48,7 @@ public class RpcServerProxy implements InvocationHandler {
     private RpcClientConfig clientConfig;
     private RpcClientCache cache;
 
+    private final Map<Integer, CountDownLatch> lockMap = new ConcurrentHashMap<>();
     private final Map<Integer, RpcResponse> responseEvents = new ConcurrentHashMap<>();
     /**
      * 异步请求回调事件
@@ -57,7 +60,12 @@ public class RpcServerProxy implements InvocationHandler {
             // 异步事件，检查回调函数
             checkCallback(sequence, response);
         } else {
+            // 同步锁
             responseEvents.put(sequence, response);
+            CountDownLatch latch = lockMap.remove(sequence);
+            if (latch != null) {
+                latch.countDown();
+            }
         }
     }
 
@@ -189,14 +197,12 @@ public class RpcServerProxy implements InvocationHandler {
         }
         this.session.writeAndFlush(request);
         // 同步调用
-        RpcResponse response;
-        while (true) {
-            long currentTime = System.currentTimeMillis();
-            if ((currentTime - startTime) > clientConfig.getSyncTimeout()) {
-                invokeEnd(rpcInfo, false);
-                return null;
-            }
-            if ((response = responseEvents.remove(request.getSequence())) != null) {
+        CountDownLatch latch = new CountDownLatch(1);
+        lockMap.put(request.getSequence(), latch);
+        try {
+            boolean await = latch.await(clientConfig.getSyncTimeout(), TimeUnit.MILLISECONDS);
+            if (await) {
+                RpcResponse response = responseEvents.remove(request.getSequence());
                 // 记录响应数据
                 rpcInfo.setResponse(response);
                 if (StringUtils.isNotEmpty(response.getException())) {
@@ -207,7 +213,13 @@ public class RpcServerProxy implements InvocationHandler {
                 invokeEnd(rpcInfo, true);
                 return returnData;
             }
+        } catch (InterruptedException e) {
+            log.error("[RPC客户端]{}同步锁等待发生异常", name);
+            e.printStackTrace();
         }
+        // 超过了等待时间
+        invokeEnd(rpcInfo, false);
+        return null;
     }
 
     /**

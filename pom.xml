@@ -24,14 +24,15 @@
         <maven.compiler.target>11</maven.compiler.target>
         <rpc.version>1.0.0</rpc.version>
         <!-- default scope -->
-        <netty-all.version>4.1.67.Final</netty-all.version>
+        <netty-all.version>4.1.86.Final</netty-all.version>
         <slf4j-api.version>1.7.25</slf4j-api.version>
         <jackson-dataformat-yaml.version>2.13.4</jackson-dataformat-yaml.version>
         <hessian.version>4.0.66</hessian.version>
+        <kryo.version>5.4.0</kryo.version>
         <!-- compile scope -->
         <lombok.version>1.18.24</lombok.version>
         <!-- test scope -->
-        <logback-classic.version>1.2.3</logback-classic.version>
+        <logback-classic.version>1.2.9</logback-classic.version>
         <junit.version>4.13.2</junit.version>
     </properties>
 
@@ -55,7 +56,7 @@
         <dependency>
             <groupId>com.esotericsoftware</groupId>
             <artifactId>kryo</artifactId>
-            <version>5.4.0</version>
+            <version>${kryo.version}</version>
         </dependency>
         <dependency>
             <groupId>com.caucho</groupId>

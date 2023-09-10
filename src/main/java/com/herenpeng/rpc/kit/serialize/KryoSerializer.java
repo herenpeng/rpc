@@ -23,7 +23,7 @@ public class KryoSerializer implements Serializer {
         kryo.setReferences(false);
         // 设置是否注册全限定名，
         kryo.setRegistrationRequired(false);
-        // 设置初始化策略，如果没有默认无参构造器，那么就需要设置此项,使用此策略构造一个无参构造器
+        // 设置初始化策略，如果没有默认无参构造器，那么就需要设置此项，使用此策略构造一个无参构造器
         kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
         return kryo;
     });
