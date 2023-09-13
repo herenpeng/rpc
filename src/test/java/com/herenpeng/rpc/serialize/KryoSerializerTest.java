@@ -4,6 +4,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.herenpeng.rpc.bean.User;
+import org.junit.Test;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 
 import java.util.Arrays;
@@ -17,7 +18,8 @@ public class KryoSerializerTest {
 
     private static final User user = new User(17, "小雷", true, 25, new Date(), new Date(), new Date());
 
-    public static void main(String[] args) {
+    @Test
+    public void test01() {
         Kryo kryo = new Kryo();
         kryo.setReferences(false);
         //设置是否注册全限定名，

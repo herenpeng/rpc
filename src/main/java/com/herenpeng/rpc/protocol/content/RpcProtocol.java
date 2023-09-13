@@ -47,13 +47,13 @@ public class RpcProtocol implements Protocol {
      * 消息
      */
     public static final byte SUB_TYPE_MESSAGE = 1;
+    /**
+     * 内部使用的一些消息，比如：监控功能
+     */
+    public static final byte SUB_TYPE_INTERNAL = 2;
 
     public static final ProtocolProcessor processor = new RpcProtocolProcessor();
 
-    /**
-     * 协议版本号，用于后期扩展协议，默认为1
-     */
-    private byte version = VERSION_1;
     /**
      * 消息类型
      */
@@ -113,9 +113,12 @@ public class RpcProtocol implements Protocol {
         return processor;
     }
 
+    /**
+     * 协议版本号，用于后期扩展协议，默认为1
+     */
     @Override
     public byte getVersion() {
-        return version;
+        return VERSION_1;
     }
 
     protected Serializer getSerializer() {

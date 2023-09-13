@@ -1,11 +1,11 @@
 package com.herenpeng.rpc.server;
 
 import com.herenpeng.rpc.common.RpcMethodInvoke;
-import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.config.RpcServerConfig;
-import com.herenpeng.rpc.kit.StringUtils;
+import com.herenpeng.rpc.internal.InternalCmdHandler;
 import com.herenpeng.rpc.kit.thread.RpcThreadFactory;
+import com.herenpeng.rpc.monitor.RpcServerPerformanceData;
 import com.herenpeng.rpc.protocol.ProtocolDecoder;
 import com.herenpeng.rpc.protocol.ProtocolEncoder;
 import com.herenpeng.rpc.protocol.content.*;
@@ -130,21 +130,21 @@ public class RpcServer {
 
 
     public void invoke(RpcRequest<?> request, ChannelHandlerContext ctx) {
-        performanceData.setRequestNum(performanceData.getRequestNum() + 1);
+        performanceData.addRequestNum(request);
         if (request == null) {
             throw new IllegalArgumentException("[RPC服务端]" + name + "：request不允许为null");
         }
         service.execute(() -> {
             RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence(), request.getSerialize());
             try {
-                RpcMethodInvoke methodInvoke = getRpcMethodInvoke(request);
+                RpcMethodInvoke methodInvoke = cache.getMethodInvoke(request.getCmd());
                 Object rpcServer = methodInvoke.getRpcServer();
                 Method method = methodInvoke.getMethod();
                 Object[] params = request.getParams(method.getGenericParameterTypes());
                 // 执行方法
                 Object returnData = method.invoke(rpcServer, params);
                 response.setReturnData(returnData);
-                performanceData.setSuccessNum(performanceData.getSuccessNum() + 1);
+                performanceData.addSuccessNum(request);
             } catch (Exception e) {
                 log.error("[RPC服务端]{}：服务端执行方法发生异常：{}", name, request);
                 Throwable exception = e;
@@ -155,7 +155,7 @@ public class RpcServer {
                     response.setException(exception.getMessage());
                     exception.printStackTrace();
                 }
-                performanceData.setExceptionNum(performanceData.getExceptionNum() + 1);
+                performanceData.addFailNum(request);
             }
             ctx.writeAndFlush(response);
             log.info("[RPC服务端]{}：响应RPC请求消息，消息序列号：{}", name, request.getSequence());
@@ -163,13 +163,22 @@ public class RpcServer {
     }
 
 
-    private RpcMethodInvoke getRpcMethodInvoke(RpcRequest<?> request) {
-        if (StringUtils.isNotEmpty(request.getMethodPath())) {
-            String path = request.getMethodPath();
-            return cache.getMethodInvoke(path);
+//    private RpcMethodInvoke getRpcMethodInvoke(RpcRequest<?> request) {
+//        if (StringUtils.isNotEmpty(request.getMethodPath())) {
+//            String path = request.getMethodPath();
+//            return cache.getMethodInvoke(path);
+//        }
+//        RpcMethodLocator locator = request.getMethodLocator();
+//        return cache.getMethodInvoke(locator);
+//    }
+
+
+    public void handleInternal(RpcRequest<?> request, ChannelHandlerContext ctx) {
+        RpcResponse response = InternalCmdHandler.invoke(this, request);
+        ctx.writeAndFlush(response);
+        if (this.serverConfig.isHeartbeatLogEnable()) {
+            log.info("[RPC服务端]{}：接收内部消息，cmd:{}，消息序列号：{}", name, request.getCmd(), response.getSequence());
         }
-        RpcMethodLocator locator = request.getMethodLocator();
-        return cache.getMethodInvoke(locator);
     }
 
 

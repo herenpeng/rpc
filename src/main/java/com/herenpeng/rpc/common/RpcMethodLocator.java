@@ -19,6 +19,8 @@ public class RpcMethodLocator implements Serializable {
 
     private String methodName;
 
+    private String path;
+
     /**
      * 最后一个参数如果为rpc回调（async值为true），则会删掉最后一个参数
      */

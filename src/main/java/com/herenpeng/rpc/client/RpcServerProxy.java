@@ -6,6 +6,8 @@ import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcClientConfig;
 import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.exception.RpcException;
+import com.herenpeng.rpc.internal.InternalCmdEnum;
+import com.herenpeng.rpc.internal.InternalCmdHandler;
 import com.herenpeng.rpc.kit.*;
 import com.herenpeng.rpc.kit.thread.RpcScheduler;
 import com.herenpeng.rpc.kit.thread.RpcThreadFactory;
@@ -97,8 +99,9 @@ public class RpcServerProxy implements InvocationHandler {
 
     private void initRpcClientCache(List<Class<?>> classList) {
         this.cache = new RpcClientCache();
-        List<Class<?>> list = classList.stream().filter(clazz -> clazz.getAnnotation(RpcApi.class) != null).collect(Collectors.toList());
-        this.cache.initMethodLocator(list);
+//        List<Class<?>> list = classList.stream().filter(clazz -> clazz.getAnnotation(RpcApi.class) != null).collect(Collectors.toList());
+//        this.cache.initMethodLocator(list);
+        this.cache.setClassList(classList);
         log.info("[RPC客户端]{}：缓存初始化完成", name);
     }
 
@@ -147,6 +150,7 @@ public class RpcServerProxy implements InvocationHandler {
         RpcScheduler.doTask(() -> {
             if (this.session.isActive()) {
                 log.info("[RPC客户端]{}：链接成功，主机：{}，端口：{}", name, host, port);
+                connectionSuccessHandler();
             } else {
                 log.error("[RPC客户端]{}：链接失败，准备重连，主机：{}，端口：{}", name, host, port);
                 // 如果 Socket Channel 未激活，1秒后自动重连
@@ -155,18 +159,27 @@ public class RpcServerProxy implements InvocationHandler {
         }, clientConfig.getReconnectionTime());
     }
 
+    /**
+     * 链接成功后处理一下事情
+     */
+    private void connectionSuccessHandler() {
+        // 初始化Rpc列表
+        initRpcTable();
+    }
+
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
-        RpcMethodLocator methodLocator = cache.getMethodLocator(method);
-        RpcCallback<?> callback = RpcKit.getRpcCallback(args, methodLocator.isAsync());
-        RpcRequest<?> request = new RpcRequest<>(methodLocator, args, method.getGenericReturnType(),
-                methodLocator.isAsync(), callback, clientConfig.getSerialize());
+        int cmd = cache.getCmd(method);
+        RpcCallback<?> callback = RpcKit.getRpcCallback(args);
+        RpcRequest<?> request = new RpcRequest<>(cmd, args, method.getGenericReturnType(),
+                callback, clientConfig.getSerialize());
         return invoke(request);
     }
 
     public <T> T invokeMethod(String path, Object[] args, Type returnType, boolean async, RpcCallback<T> callback) {
-        RpcRequest<T> request = new RpcRequest<>(path, args, returnType, async, callback, clientConfig.getSerialize());
+        int cmd = cache.getCmd(path);
+        RpcRequest<T> request = new RpcRequest<>(cmd, args, returnType, async, callback, clientConfig.getSerialize());
         return invoke(request);
     }
 
@@ -297,7 +310,6 @@ public class RpcServerProxy implements InvocationHandler {
             if (clientHeartbeat == sequence) {
                 if (this.clientConfig.isHeartbeatLogEnable()) {
                     log.info("[RPC客户端]{}：确认心跳消息，消息序列号：{}", name, clientHeartbeat);
-
                 }
                 return;
             }
@@ -317,14 +329,30 @@ public class RpcServerProxy implements InvocationHandler {
         // 记录，打印日志
         RpcRequest<T> request = rpcInfo.getRequest();
         RpcResponse response = rpcInfo.getResponse();
-        RpcMethodLocator locator = request.getMethodLocator();
         if (clientConfig.isMonitorLogEnable()) {
-            String target = StringUtils.isNotEmpty(request.getMethodPath()) ? request.getMethodPath() :
+            RpcMethodLocator locator = cache.getMethodLocator(request.getCmd());
+            String target = StringUtils.isNotEmpty(locator.getPath()) ? locator.getPath() :
                     locator.getClassName() + "#" + locator.getMethodName() + Arrays.toString(locator.getParamTypeNames());
-            log.info("[RPC客户端]{}：执行结果：目标：{}，是否异步：{}，是否成功，{}，入参：{}，出参：{}，消耗时间：{}ms", name,
-                    target, request.isAsync(), rpcInfo.isSuccess(), request.getParams(),
+            log.info("[RPC客户端]{}：执行结果：cmd：{}，目标：{}，是否异步：{}，是否成功，{}，入参：{}，出参：{}，消耗时间：{}ms", name,
+                    request.getCmd(), target, request.isAsync(), rpcInfo.isSuccess(), request.getParams(),
                     response == null ? null : response.getReturnData(), rpcInfo.getEndTime() - rpcInfo.getStartTime());
         }
+    }
+
+
+    private static final Map<Integer, Integer> sequenceCmdMap = new ConcurrentHashMap<>();
+
+    private <T> void initRpcTable() {
+        RpcRequest<T> request = new RpcRequest<>(RpcProtocol.SUB_TYPE_INTERNAL, clientConfig.getSerialize());
+        request.setCmd(InternalCmdEnum.RPC_TABLE.getCmd());
+        sequenceCmdMap.put(request.getSequence(), request.getCmd());
+        this.session.writeAndFlush(request);
+        log.info("[RPC客户端]请求服务端Rpc列表数据，消息序列号：{}，cmd：{}", request.getSequence(), request.getCmd());
+    }
+
+    public void handleInternal(int sequence, RpcResponse response) {
+        Integer cmd = sequenceCmdMap.get(sequence);
+        InternalCmdHandler.handleClient(this, cmd, response);
     }
 
 

@@ -37,6 +37,9 @@ public class RpcProtocolProcessor implements ProtocolProcessor {
                     // 处理RPC服务端响应
                     rpcServerProxy.setRpcResponse(response.getSequence(), response);
                     break;
+                case RpcProtocol.SUB_TYPE_INTERNAL:
+                    rpcServerProxy.handleInternal(response.getSequence(), response);
+                    break;
                 default:
                     log.error("[RPC客户端]{}：错误的消息类型：{}，消息序列号：{}", rpcServerProxy.getName(), response.getType(), response.getSequence());
             }
@@ -54,9 +57,13 @@ public class RpcProtocolProcessor implements ProtocolProcessor {
                     break;
                 case RpcProtocol.SUB_TYPE_MESSAGE:
                     log.info("[RPC服务端]{}：接收RPC请求消息，消息序列号：{}", rpcServer.getName(), request.getSequence());
-                    rpcServer.invoke(request,ctx);
+                    rpcServer.invoke(request, ctx);
                     break;
+               case RpcProtocol.SUB_TYPE_INTERNAL:
+                   rpcServer.handleInternal(request, ctx);
+                   break;
                 default:
+                    log.error("{}", request);
                     log.error("[RPC服务端]{}：错误的消息类型：{}，消息序列号：{}", rpcServer.getName(), request.getType(), request.getSequence());
             }
         }

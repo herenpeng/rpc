@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.herenpeng.rpc.bean.User;
 import com.herenpeng.rpc.kit.ValueType;
 import com.herenpeng.rpc.service.UserServiceImpl;
+import org.junit.Test;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -33,7 +34,8 @@ public class JsonSerializerTest {
         list.add(new User(21, "小周", false, 35, new Date(), new Date(), new Date()));
     }
 
-    public static void main(String[] args) throws Exception {
+    @Test
+    public void test01() throws Exception {
         String json = objectMapper.writeValueAsString(list);
         System.out.println(json);
 

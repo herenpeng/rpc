@@ -4,6 +4,7 @@ import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
 import com.herenpeng.rpc.bean.User;
 import com.herenpeng.rpc.common.RpcMethodLocator;
+import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -17,10 +18,11 @@ import java.util.Date;
  */
 public class HessianSerializerTest {
 
-    public static void main(String[] args) throws IOException {
+    @Test
+    public void test01() throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         Hessian2Output out = new Hessian2Output(os);
-        out.writeObject(new RpcMethodLocator("com.herenpeng.rpc.service.UserService", "getUserInfo", new String[]{"java.lang.String"}, true));
+        out.writeObject(new RpcMethodLocator("com.herenpeng.rpc.service.UserService", "getUserInfo", null, new String[]{"java.lang.String"}, true));
         out.flush();
         byte[] bytes = os.toByteArray();
         System.out.println(Arrays.toString(bytes));

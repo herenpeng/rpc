@@ -23,7 +23,7 @@ public class MockRpc {
     public static void main(String[] args) throws Exception {
         RpcRunner.run(MockRpc.class, args);
 
-        Thread.sleep(1500);
+        Thread.sleep(3500);
 
         UserService userService = RpcClient.createRpc(MockRpcClient, UserService.class);
         UserService userService2 = RpcClient.createRpc(MockRpcClient2, UserService.class);

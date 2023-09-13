@@ -15,7 +15,7 @@ public class StringUtils {
      * @return 为null或者为""返回true，否则返回false
      */
     public static boolean isEmpty(String string) {
-        return string == null || string.length() == 0;
+        return string == null || string.isEmpty();
     }
 
     /**
@@ -26,6 +26,22 @@ public class StringUtils {
      */
     public static boolean isNotEmpty(String string) {
         return !isEmpty(string);
+    }
+
+
+    /**
+     * 将指定的字符串内容，处理为 /aaa/bbb 以 / 开头，不以 / 结尾的字符串
+     *
+     * @param path 指定路径字符串
+     * @return 以 / 开头，不以 / 结尾的字符串
+     */
+    public static String formatPath(String path) {
+        if (isEmpty(path)) {
+            return path;
+        }
+        path = path.startsWith("/") ? path : "/" + path;
+        path = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+        return path;
     }
 
 }

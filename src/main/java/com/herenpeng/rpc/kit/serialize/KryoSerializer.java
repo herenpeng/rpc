@@ -17,7 +17,7 @@ import java.util.Arrays;
 @Slf4j
 public class KryoSerializer implements Serializer {
 
-    private static final ThreadLocal<Kryo> KEYOS = ThreadLocal.withInitial(() -> {
+    private static final ThreadLocal<Kryo> KRYOS = ThreadLocal.withInitial(() -> {
         Kryo kryo = new Kryo();
         // 在此处配置kryo对象的使用示例，如循环引用等
         kryo.setReferences(false);
@@ -36,7 +36,7 @@ public class KryoSerializer implements Serializer {
     @Override
     public byte[] serialize(Object data) throws RpcException {
         try {
-            Kryo kryo = KEYOS.get();
+            Kryo kryo = KRYOS.get();
             // 使用 Output 对象池会导致序列化重复的错误（getBuffer返回了Output对象的buffer引用）
             Output opt = new Output(1024, -1);
             kryo.writeClassAndObject(opt, data);
@@ -51,7 +51,7 @@ public class KryoSerializer implements Serializer {
     @Override
     public <T> T deserialize(byte[] bytes, Type valueType) throws RpcException {
         try (Input input = new Input(bytes)) {
-            Kryo kryo = KEYOS.get();
+            Kryo kryo = KRYOS.get();
             return (T) kryo.readClassAndObject(input);
         } catch (Exception e) {
             log.error("[RPC工具]Kryo反序列化错误：{}，反序列化类型：{}，错误信息：{}", bytes, valueType, e.getMessage());
