@@ -41,7 +41,7 @@ public abstract class InternalCmdHandler {
     abstract void invoke(RpcServer rpcServer, RpcRequest<?> request, RpcResponse response);
 
 
-    public static void handleClient(RpcServerProxy rpcServerProxy, int cmd, RpcResponse response) {
+    public static void handleClient(int cmd, RpcServerProxy rpcServerProxy, RpcResponse response) {
         InternalCmdHandler internalCmd = internalCmdMap.get(cmd);
         internalCmd.handleClient(rpcServerProxy, response);
     }

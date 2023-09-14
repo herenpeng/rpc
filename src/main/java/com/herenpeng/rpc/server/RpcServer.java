@@ -5,7 +5,7 @@ import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.config.RpcServerConfig;
 import com.herenpeng.rpc.internal.InternalCmdHandler;
 import com.herenpeng.rpc.kit.thread.RpcThreadFactory;
-import com.herenpeng.rpc.monitor.RpcServerPerformanceData;
+import com.herenpeng.rpc.common.RpcServerPerformanceData;
 import com.herenpeng.rpc.protocol.ProtocolDecoder;
 import com.herenpeng.rpc.protocol.ProtocolEncoder;
 import com.herenpeng.rpc.protocol.content.*;

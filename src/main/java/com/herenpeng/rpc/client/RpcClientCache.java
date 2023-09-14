@@ -3,13 +3,13 @@ package com.herenpeng.rpc.client;
 import com.herenpeng.rpc.annotation.RpcApi;
 import com.herenpeng.rpc.annotation.RpcService;
 import com.herenpeng.rpc.common.RpcMethodLocator;
+import com.herenpeng.rpc.kit.MapKit;
 import com.herenpeng.rpc.kit.RpcKit;
 import com.herenpeng.rpc.kit.StringUtils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,20 +31,12 @@ public class RpcClientCache {
     private Map<Integer, RpcMethodLocator> rpcTable;
 
 
-    private Map<RpcMethodLocator, Integer> reverseMap() {
-        Map<RpcMethodLocator, Integer> locatorCmdMap = new HashMap<>();
-        for (Map.Entry<Integer, RpcMethodLocator> entry : rpcTable.entrySet()) {
-            locatorCmdMap.put(entry.getValue(), entry.getKey());
-        }
-        return locatorCmdMap;
-    }
-
     /**
      * 初始化方法定位符
      */
     public void initMethodCmd(Map<Integer, RpcMethodLocator> rpcTable) {
         this.rpcTable = rpcTable;
-        Map<RpcMethodLocator, Integer> locatorCmdMap = reverseMap();
+        Map<RpcMethodLocator, Integer> locatorCmdMap = MapKit.reverse(rpcTable);
         try {
             List<Class<?>> apiClassList = classList.stream()
                     .filter(clazz -> clazz.isInterface() && clazz.getAnnotation(RpcApi.class) != null).collect(Collectors.toList());

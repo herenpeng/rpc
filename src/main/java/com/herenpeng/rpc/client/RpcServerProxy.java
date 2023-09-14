@@ -1,6 +1,5 @@
 package com.herenpeng.rpc.client;
 
-import com.herenpeng.rpc.annotation.RpcApi;
 import com.herenpeng.rpc.common.RpcInfo;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.config.RpcClientConfig;
@@ -31,7 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * @author herenpeng
@@ -99,8 +97,6 @@ public class RpcServerProxy implements InvocationHandler {
 
     private void initRpcClientCache(List<Class<?>> classList) {
         this.cache = new RpcClientCache();
-//        List<Class<?>> list = classList.stream().filter(clazz -> clazz.getAnnotation(RpcApi.class) != null).collect(Collectors.toList());
-//        this.cache.initMethodLocator(list);
         this.cache.setClassList(classList);
         log.info("[RPC客户端]{}：缓存初始化完成", name);
     }
@@ -331,10 +327,8 @@ public class RpcServerProxy implements InvocationHandler {
         RpcResponse response = rpcInfo.getResponse();
         if (clientConfig.isMonitorLogEnable()) {
             RpcMethodLocator locator = cache.getMethodLocator(request.getCmd());
-            String target = StringUtils.isNotEmpty(locator.getPath()) ? locator.getPath() :
-                    locator.getClassName() + "#" + locator.getMethodName() + Arrays.toString(locator.getParamTypeNames());
             log.info("[RPC客户端]{}：执行结果：cmd：{}，目标：{}，是否异步：{}，是否成功，{}，入参：{}，出参：{}，消耗时间：{}ms", name,
-                    request.getCmd(), target, request.isAsync(), rpcInfo.isSuccess(), request.getParams(),
+                    request.getCmd(), locator.key(), request.isAsync(), rpcInfo.isSuccess(), request.getParams(),
                     response == null ? null : response.getReturnData(), rpcInfo.getEndTime() - rpcInfo.getStartTime());
         }
     }
@@ -352,7 +346,7 @@ public class RpcServerProxy implements InvocationHandler {
 
     public void handleInternal(int sequence, RpcResponse response) {
         Integer cmd = sequenceCmdMap.get(sequence);
-        InternalCmdHandler.handleClient(this, cmd, response);
+        InternalCmdHandler.handleClient(cmd, this, response);
     }
 
 

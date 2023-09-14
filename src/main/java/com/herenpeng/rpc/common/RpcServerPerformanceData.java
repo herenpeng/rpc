@@ -1,4 +1,4 @@
-package com.herenpeng.rpc.monitor;
+package com.herenpeng.rpc.common;
 
 import com.herenpeng.rpc.kit.StringUtils;
 import com.herenpeng.rpc.protocol.content.RpcRequest;

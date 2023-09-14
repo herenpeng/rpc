@@ -1,8 +1,10 @@
 package com.herenpeng.rpc.common;
 
+import com.herenpeng.rpc.kit.StringUtils;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * @author herenpeng
@@ -29,5 +31,11 @@ public class RpcMethodLocator implements Serializable {
      * 异步方法标识
      */
     private boolean async;
+
+
+    public String key() {
+        return StringUtils.isNotEmpty(path) ? path :
+                className + "#" + methodName + Arrays.toString(paramTypeNames);
+    }
 
 }
