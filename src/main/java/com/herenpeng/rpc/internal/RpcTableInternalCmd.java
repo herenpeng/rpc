@@ -22,10 +22,9 @@ public class RpcTableInternalCmd extends InternalCmdHandler {
     }
 
     @Override
-    void invoke(RpcServer rpcServer, RpcRequest<?> request, RpcResponse response) {
+    Object invoke(RpcServer rpcServer) {
         RpcServerCache cache = rpcServer.getCache();
-        Map<Integer, RpcMethodLocator> rpcTable = cache.getRpcTable();
-        response.setReturnData(rpcTable);
+        return cache.getRpcTable();
     }
 
     @Override

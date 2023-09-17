@@ -9,7 +9,7 @@ import java.util.Collection;
  * @since 2023-02-25 10:21
  */
 @Slf4j
-public class Collections {
+public class CollectionKit {
 
     public static boolean isEmpty(Object[] arr) {
         return arr == null || arr.length == 0;

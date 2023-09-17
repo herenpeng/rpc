@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * @author herenpeng
@@ -83,14 +84,14 @@ public class RpcServerProxy implements InvocationHandler {
     }
 
     public void init(List<Class<?>> classList) {
-        long start = System.currentTimeMillis();
+        long start = DateKit.now();
         // 初始化客户端缓存
         initRpcClientCache(classList);
         // 初始化服务端代理
         initRpcServerProxy();
         // 初始化定时任务
         initRpcSchedule();
-        long end = System.currentTimeMillis();
+        long end = DateKit.now();
         log.info("[RPC客户端]{}：初始化完成，已创建{}服务代理，主机：{}，端口：{}，共耗时{}毫秒", name, name, host, port, end - start);
     }
 
@@ -160,7 +161,15 @@ public class RpcServerProxy implements InvocationHandler {
      */
     private void connectionSuccessHandler() {
         // 初始化Rpc列表
-        initRpcTable();
+        invokeInternal(InternalCmdEnum.RPC_TABLE);
+        synchronized (successHandler) {
+            for (Map.Entry<Consumer<Integer>, Integer> entry : successHandler.entrySet()) {
+                Consumer<Integer> consumer = entry.getKey();
+                Integer cmd = entry.getValue();
+                consumer.accept(cmd);
+            }
+            successHandler.clear();
+        }
     }
 
 
@@ -188,7 +197,7 @@ public class RpcServerProxy implements InvocationHandler {
      * @return 返回对象
      */
     private <T> T invoke(RpcRequest<T> request) {
-        long startTime = System.currentTimeMillis();
+        long startTime = DateKit.now();
         RpcInfo<T> rpcInfo = invokeStart(startTime);
         // 记录信息
         rpcInfo.setRequest(request);
@@ -320,7 +329,7 @@ public class RpcServerProxy implements InvocationHandler {
     }
 
     private <T> void invokeEnd(RpcInfo<T> rpcInfo, boolean success) {
-        rpcInfo.setEndTime(System.currentTimeMillis());
+        rpcInfo.setEndTime(DateKit.now());
         rpcInfo.setSuccess(success);
         // 记录，打印日志
         RpcRequest<T> request = rpcInfo.getRequest();
@@ -334,18 +343,26 @@ public class RpcServerProxy implements InvocationHandler {
     }
 
 
-    private static final Map<Integer, Integer> sequenceCmdMap = new ConcurrentHashMap<>();
+    private static final Map<Consumer<Integer>, Integer> successHandler = new HashMap<>();
+    private static final Map<Integer, Integer> sequenceInternalCmdMap = new ConcurrentHashMap<>();
 
-    private <T> void initRpcTable() {
-        RpcRequest<T> request = new RpcRequest<>(RpcProtocol.SUB_TYPE_INTERNAL, clientConfig.getSerialize());
-        request.setCmd(InternalCmdEnum.RPC_TABLE.getCmd());
-        sequenceCmdMap.put(request.getSequence(), request.getCmd());
+    public void invokeInternal(InternalCmdEnum internalCmdEnum) {
+        if (this.session.isActive()) {
+            invokeInternal(internalCmdEnum.getCmd());
+        } else {
+            successHandler.put(this::invokeInternal, internalCmdEnum.getCmd());
+        }
+    }
+
+    private void invokeInternal(int cmd) {
+        RpcRequest<?> request = new RpcRequest<>(RpcProtocol.SUB_TYPE_INTERNAL, clientConfig.getSerialize());
+        request.setCmd(cmd);
+        sequenceInternalCmdMap.put(request.getSequence(), request.getCmd());
         this.session.writeAndFlush(request);
-        log.info("[RPC客户端]请求服务端Rpc列表数据，消息序列号：{}，cmd：{}", request.getSequence(), request.getCmd());
     }
 
     public void handleInternal(int sequence, RpcResponse response) {
-        Integer cmd = sequenceCmdMap.get(sequence);
+        Integer cmd = sequenceInternalCmdMap.get(sequence);
         InternalCmdHandler.handleClient(cmd, this, response);
     }
 

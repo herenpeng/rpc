@@ -56,7 +56,7 @@ public class RpcServerCache {
                 for (Method method : methods) {
                     RpcMethodInvoke methodInvoke = new RpcMethodInvoke(method, rpcServer);
                     RpcMethodLocator methodLocator = RpcKit.getMethodLocator(api.getName(), method, path);
-                    int cmd = cmdGenerator.addAndGet(1);
+                    int cmd = cmdGenerator.incrementAndGet();
                     rpcTable.put(cmd, methodLocator);
                     cmdInvokeMap.put(cmd, methodInvoke);
                 }

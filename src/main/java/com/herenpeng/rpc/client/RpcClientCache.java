@@ -3,6 +3,7 @@ package com.herenpeng.rpc.client;
 import com.herenpeng.rpc.annotation.RpcApi;
 import com.herenpeng.rpc.annotation.RpcService;
 import com.herenpeng.rpc.common.RpcMethodLocator;
+import com.herenpeng.rpc.kit.CollectionKit;
 import com.herenpeng.rpc.kit.MapKit;
 import com.herenpeng.rpc.kit.RpcKit;
 import com.herenpeng.rpc.kit.StringUtils;
@@ -36,6 +37,9 @@ public class RpcClientCache {
      */
     public void initMethodCmd(Map<Integer, RpcMethodLocator> rpcTable) {
         this.rpcTable = rpcTable;
+        if (CollectionKit.isEmpty(classList)) {
+            return;
+        }
         Map<RpcMethodLocator, Integer> locatorCmdMap = MapKit.reverse(rpcTable);
         try {
             List<Class<?>> apiClassList = classList.stream()

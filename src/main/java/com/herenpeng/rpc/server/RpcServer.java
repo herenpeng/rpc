@@ -1,11 +1,13 @@
 package com.herenpeng.rpc.server;
 
 import com.herenpeng.rpc.common.RpcMethodInvoke;
+import com.herenpeng.rpc.common.RpcServerMonitorData;
 import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.config.RpcServerConfig;
 import com.herenpeng.rpc.internal.InternalCmdHandler;
+import com.herenpeng.rpc.kit.DateKit;
+import com.herenpeng.rpc.kit.RpcKit;
 import com.herenpeng.rpc.kit.thread.RpcThreadFactory;
-import com.herenpeng.rpc.common.RpcServerPerformanceData;
 import com.herenpeng.rpc.protocol.ProtocolDecoder;
 import com.herenpeng.rpc.protocol.ProtocolEncoder;
 import com.herenpeng.rpc.protocol.content.*;
@@ -46,13 +48,13 @@ public class RpcServer {
     /**
      * rpc性能数据监控对象
      */
-    private final RpcServerPerformanceData performanceData;
+    private final RpcServerMonitorData monitorData;
     private ExecutorService service;
 
 
     public RpcServer() {
         this.instance = this;
-        performanceData = new RpcServerPerformanceData();
+        monitorData = new RpcServerMonitorData();
     }
 
     /**
@@ -61,7 +63,7 @@ public class RpcServer {
      * @param rpcApplicationClass 需要扫描的Root类
      */
     public void start(Class<?> rpcApplicationClass, RpcServerConfig serverConfig, List<Class<?>> classList) {
-        long start = System.currentTimeMillis();
+        long start = DateKit.now();
         this.serverConfig = serverConfig;
         this.name = serverConfig.getName();
         log.info("[RPC服务端]{}：正在初始化", name);
@@ -69,9 +71,9 @@ public class RpcServer {
         initRpcCache(classList);
         // 初始化rpc服务端
         initRpcServer(serverConfig.getPort());
-        long end = System.currentTimeMillis();
+        long end = DateKit.now();
         log.info("[RPC服务端]{}：初始化完成，端口：{}，共耗时{}毫秒", name, serverConfig.getPort(), end - start);
-        performanceData.setStartUpTime(end);
+        monitorData.setStartUpTime(end);
     }
 
     private void initRpcCache(List<Class<?>> classList) {
@@ -130,21 +132,23 @@ public class RpcServer {
 
 
     public void invoke(RpcRequest<?> request, ChannelHandlerContext ctx) {
-        performanceData.addRequestNum(request);
+        int cmd = request.getCmd();
+        String clientIp = RpcKit.getClientIp(ctx);
+        monitorData.addRequest(clientIp, cmd);
         if (request == null) {
             throw new IllegalArgumentException("[RPC服务端]" + name + "：request不允许为null");
         }
         service.execute(() -> {
             RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence(), request.getSerialize());
             try {
-                RpcMethodInvoke methodInvoke = cache.getMethodInvoke(request.getCmd());
+                RpcMethodInvoke methodInvoke = cache.getMethodInvoke(cmd);
                 Object rpcServer = methodInvoke.getRpcServer();
                 Method method = methodInvoke.getMethod();
                 Object[] params = request.getParams(method.getGenericParameterTypes());
                 // 执行方法
                 Object returnData = method.invoke(rpcServer, params);
                 response.setReturnData(returnData);
-                performanceData.addSuccessNum(request);
+                monitorData.addSuccess(clientIp, cmd);
             } catch (Exception e) {
                 log.error("[RPC服务端]{}：服务端执行方法发生异常：{}", name, request);
                 Throwable exception = e;
@@ -155,22 +159,12 @@ public class RpcServer {
                     response.setException(exception.getMessage());
                     exception.printStackTrace();
                 }
-                performanceData.addFailNum(request);
+                monitorData.addFail(clientIp, cmd);
             }
             ctx.writeAndFlush(response);
-            log.info("[RPC服务端]{}：响应RPC请求消息，消息序列号：{}", name, request.getSequence());
+            log.info("[RPC服务端]{}：响应RPC请求消息，cmd：{}，消息序列号：{}", name, cmd, request.getSequence());
         });
     }
-
-
-//    private RpcMethodInvoke getRpcMethodInvoke(RpcRequest<?> request) {
-//        if (StringUtils.isNotEmpty(request.getMethodPath())) {
-//            String path = request.getMethodPath();
-//            return cache.getMethodInvoke(path);
-//        }
-//        RpcMethodLocator locator = request.getMethodLocator();
-//        return cache.getMethodInvoke(locator);
-//    }
 
 
     public void handleInternal(RpcRequest<?> request, ChannelHandlerContext ctx) {

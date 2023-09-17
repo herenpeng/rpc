@@ -3,12 +3,12 @@ package com.herenpeng.rpc.kit;
 import com.herenpeng.rpc.annotation.RpcMethod;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.exception.RpcException;
+import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * @author herenpeng
@@ -55,7 +55,7 @@ public class RpcKit {
 
 
     public static RpcCallback<?> getRpcCallback(Object[] args) {
-        if (Collections.isEmpty(args)) {
+        if (CollectionKit.isEmpty(args)) {
             return null;
         }
         // 异步
@@ -79,5 +79,10 @@ public class RpcKit {
         return api;
     }
 
+
+    public static String getClientIp(ChannelHandlerContext ctx) {
+        InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+        return socketAddress.getHostName() + ":" + socketAddress.getPort();
+    }
 
 }

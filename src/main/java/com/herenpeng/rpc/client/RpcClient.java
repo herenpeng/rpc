@@ -25,6 +25,15 @@ public class RpcClient {
     }
 
 
+    public static RpcServerProxy get(String name) {
+        RpcServerProxy rpcServerProxy = rpcServerProxyMap.get(name);
+        if (rpcServerProxy == null) {
+            throw new RpcException("[RPC客户端]服务" + name + "未注册，请先注册该服务");
+        }
+        return rpcServerProxy;
+    }
+
+
     /**
      * RPC服务端名称，RPC目标类名称，同步或异步，代理类
      */

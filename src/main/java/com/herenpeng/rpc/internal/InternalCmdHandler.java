@@ -34,11 +34,12 @@ public abstract class InternalCmdHandler {
     public static RpcResponse invoke(RpcServer rpcServer, RpcRequest<?> request) {
         InternalCmdHandler internalCmd = internalCmdMap.get(request.getCmd());
         RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence(), request.getSerialize());
-        internalCmd.invoke(rpcServer, request, response);
+        Object object = internalCmd.invoke(rpcServer);
+        response.setReturnData(object);
         return response;
     }
 
-    abstract void invoke(RpcServer rpcServer, RpcRequest<?> request, RpcResponse response);
+    abstract Object invoke(RpcServer rpcServer);
 
 
     public static void handleClient(int cmd, RpcServerProxy rpcServerProxy, RpcResponse response) {
