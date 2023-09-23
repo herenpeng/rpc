@@ -2,13 +2,13 @@
 
 项目地址：https://github.com/herenpeng/rpc.git
 
-- 基于 JDK11 开发
+- 基于 JDK17 开发
 - 该项目是基于 Netty4 的一个简易的 RPC 框架
 - 配置即实例，无需编写代码，根据配置内容自动实例化 RPC 实例
 - 完备的服务启动、心跳监控、服务重连等机制
 - 客户端支持动态代理，路径调用两种远程调用方式
 - 支持同步和异步调用，异步支持函数式回调
-- 支持 Json 和 Hessian 两种序列化方式，可以通过配置自由切换，无需改动代码
+- 支持 Json、Hessian、Kryo 三种序列化方式，可以通过配置自由切换，无需改动代码
 - 支持自定义通信协议
 
 <p align="center">
@@ -52,7 +52,7 @@ RPC 框架的入门，首先要使用这个 RPC 框架，搭建一个简单的 R
     <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
-        <version>1.2.3</version>
+        <version>1.2.9</version>
     </dependency>
 </dependencies>
 ```
@@ -396,6 +396,14 @@ rpc:
 | 2 | Hessian |
 | 3 | Kryo |
 
+## Rpc服务器性能监控
+
+提供了性能监控工具，使用监控工具，可以直接查看服务器性能数据。
+
+```java
+MonitorKit.monitor("127.0.0.1", 10000);
+```
+
 ## 注意
 
 1、rpc的调用规则为相同的包名调用，服务端和客户端的方法接口必须要在相同的包名下。
@@ -408,7 +416,5 @@ rpc:
 
 ## 未来预期功能
 
-- 完整的 RPC 性能监控功能
 - 运行时 RPC 操作
     - 配置查询及更新
-    - 实时性能监控

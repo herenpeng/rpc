@@ -26,7 +26,7 @@ public class MonitorInternalCmd extends InternalCmdHandler {
     void handleClient(RpcServerProxy rpcServerProxy, RpcResponse response) {
         RpcServerMonitorData monitorData = response.getReturnData(RpcServerMonitorData.class);
         long startUpTime = monitorData.getStartUpTime();
-        log.info("服务器启动时间：" + startUpTime);
+        log.info("服务器启动时间：" + DateKit.format(startUpTime));
         long runTime = DateKit.now() - startUpTime;
         log.info("服务器已运行时间：" + DateKit.getTimeText(runTime));
         for (Map.Entry<String, RpcServerMonitorData.PerformanceData> entry : monitorData.getPerformanceMap().entrySet()) {
