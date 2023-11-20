@@ -38,14 +38,13 @@ public class RpcResponse extends RpcProtocol {
             out.writeBytes(this.returnBytes);
         }
         // 编码异常信息
-        byte[] exceptionBytes = getSerializer().serialize(this.exception);
-        if (exceptionBytes == null || exceptionBytes.length == 0) {
+        if (this.exception == null) {
             out.writeInt(0);
         } else {
+            byte[] exceptionBytes = getSerializer().serialize(this.exception);
             out.writeInt(exceptionBytes.length);
             out.writeBytes(exceptionBytes);
         }
-
     }
 
     @Override

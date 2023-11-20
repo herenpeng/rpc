@@ -97,11 +97,11 @@ public class RpcServer {
             @Override
             public void initChannel(SocketChannel channel) {
                 ChannelPipeline pipeline = channel.pipeline();
-                // 这里设置通过增加包头表示报文长度来避免粘包
-                pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(1024 * 1024, 0, 2, 0, 2));
+                // 这里设置通过增加包头表示报文长度来避免粘包，最大长度为100M
+                pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(1024 * 1024 * 100, 0, 4, 0, 4));
                 pipeline.addLast("decoder", new ProtocolDecoder());
                 // 这里设置读取报文的包头长度来避免粘包
-                pipeline.addLast("frameEncoder", new LengthFieldPrepender(2));
+                pipeline.addLast("frameEncoder", new LengthFieldPrepender(4));
                 pipeline.addLast("encoder", new ProtocolEncoder());
                 pipeline.addLast("handler", new RpcServerHandler(instance));
             }

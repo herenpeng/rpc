@@ -30,13 +30,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getUserList() {
         List<User> list = new ArrayList<>();
-        list.add(new User(15, "小明", true, 18, new Date(), new Date(), new Date()));
-        list.add(new User(16, "小红", false, 21, new Date(), new Date(), new Date()));
-        list.add(new User(17, "小雷", true, 25, new Date(), new Date(), new Date()));
-        list.add(new User(18, "小刚", true, 29, new Date(), new Date(), new Date()));
-        list.add(new User(19, "小李", true, 42, new Date(), new Date(), new Date()));
-        list.add(new User(20, "小王", false, 28, new Date(), new Date(), new Date()));
-        list.add(new User(21, "小周", false, 35, new Date(), new Date(), new Date()));
+        for (int i = 0; i < 1000; i++) {
+            list.add(new User(15, "小明", true, 18, new Date(), new Date(), new Date()));
+            list.add(new User(16, "小红", false, 21, new Date(), new Date(), new Date()));
+            list.add(new User(17, "小雷", true, 25, new Date(), new Date(), new Date()));
+            list.add(new User(18, "小刚", true, 29, new Date(), new Date(), new Date()));
+            list.add(new User(19, "小李", true, 42, new Date(), new Date(), new Date()));
+            list.add(new User(20, "小王", false, 28, new Date(), new Date(), new Date()));
+            list.add(new User(21, "小周", false, 35, new Date(), new Date(), new Date()));
+        }
         return list;
     }
 

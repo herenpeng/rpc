@@ -120,11 +120,11 @@ public class RpcServerProxy implements InvocationHandler {
             @Override
             protected void initChannel(Channel channel) {
                 ChannelPipeline pipeline = channel.pipeline();
-                // 这里设置通过增加包头表示报文长度来避免粘包
-                pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(1024 * 1024, 0, 2, 0, 2));
+                // 这里设置通过增加包头表示报文长度来避免粘包，最大长度为100M
+                pipeline.addLast("frameDecoder", new LengthFieldBasedFrameDecoder(1024 * 1024 * 100, 0, 4, 0, 4));
                 pipeline.addLast("decoder", new ProtocolDecoder());
                 // 这里设置读取报文的包头长度来避免粘包
-                pipeline.addLast("frameEncoder", new LengthFieldPrepender(2));
+                pipeline.addLast("frameEncoder", new LengthFieldPrepender(4));
                 pipeline.addLast("encoder", new ProtocolEncoder());
                 pipeline.addLast("handler", new RpcClientHandler(instance));
             }
@@ -333,12 +333,11 @@ public class RpcServerProxy implements InvocationHandler {
         rpcInfo.setSuccess(success);
         // 记录，打印日志
         RpcRequest<T> request = rpcInfo.getRequest();
-        RpcResponse response = rpcInfo.getResponse();
         if (clientConfig.isMonitorLogEnable()) {
             RpcMethodLocator locator = cache.getMethodLocator(request.getCmd());
-            log.info("[RPC客户端]{}：执行结果：cmd：{}，目标：{}，是否异步：{}，是否成功，{}，入参：{}，出参：{}，消耗时间：{}ms", name,
-                    request.getCmd(), locator.key(), request.isAsync(), rpcInfo.isSuccess(), request.getParams(),
-                    response == null ? null : response.getReturnData(), rpcInfo.getEndTime() - rpcInfo.getStartTime());
+            log.info("[RPC客户端]{}：执行结果：cmd：{}，目标：{}，是否异步：{}，是否成功，{}，入参：{}，消耗时间：{}ms", name,
+                    request.getCmd(), locator.key(), request.isAsync() ? "异步" : "同步", rpcInfo.isSuccess() ? "成功" : "失败", request.getParams(),
+                    rpcInfo.getEndTime() - rpcInfo.getStartTime());
         }
     }
 
