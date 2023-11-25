@@ -6,9 +6,14 @@ import com.herenpeng.rpc.exception.RpcException;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * @author herenpeng
@@ -84,5 +89,42 @@ public class RpcKit {
         InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         return socketAddress.getHostName() + ":" + socketAddress.getPort();
     }
+
+
+    public static byte[] compress(byte[] bytes) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             GZIPOutputStream gzip = new GZIPOutputStream(bos)) {
+            gzip.write(bytes);
+            //关闭压缩工具流
+            gzip.finish();
+            gzip.flush();
+            return bos.toByteArray();
+        } catch (IOException e) {
+            log.error("压缩数据错误！");
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public static byte[] decompress(byte[] bytes) {
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             GZIPInputStream gzip = new GZIPInputStream(bis);
+             ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int num;
+            while ((num = gzip.read(buffer, 0, buffer.length)) != -1) {
+                bos.write(buffer, 0, num);
+            }
+            byte[] data = bos.toByteArray();
+            bos.flush();
+            return data;
+        } catch (IOException e) {
+            log.error("解压缩数据错误！");
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
 }

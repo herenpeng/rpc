@@ -53,8 +53,8 @@ public class HessianSerializer implements Serializer {
             in = new Hessian2Input(is);
             return (T) in.readObject();
         } catch (Exception e) {
-            log.error("[RPC工具]Hessian反序列化错误：{}, 反序列化类型：{}，错误信息：{}", bytes, valueType, e.getMessage());
-            throw new RpcException("[RPC工具]Hessian反序列化错误：" + Arrays.toString(bytes) + ", 反序列化类型：" + valueType);
+            log.error("[RPC工具]Hessian反序列化错误，反序列化类型：{}，错误信息：{}", valueType, e.getMessage());
+            throw new RpcException("[RPC工具]Hessian反序列化错误，反序列化类型：" + valueType);
         } finally {
             if (in != null) {
                 try {

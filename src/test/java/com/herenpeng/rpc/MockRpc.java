@@ -59,10 +59,10 @@ public class MockRpc {
 
     private static void rpcServerProxyReturnUser(UserService userService) {
         User user = userService.getUserInfo("肖总");
-        System.err.println("同步调用1 =====> " + user);
+//        System.err.println("同步调用1 =====> " + user);
 
         userService.getUserInfo("肖总", (data) -> {
-            System.err.println("异步调用2 =====> " + data);
+//            System.err.println("异步调用2 =====> " + data);
         });
     }
 
@@ -71,12 +71,12 @@ public class MockRpc {
         List<User> userList = userService.getUserList();
         if (userList != null) {
             for (User user : userList) {
-                System.err.println("同步调用3 =====> " + user.getUsername());
+//                System.err.println("同步调用3 =====> " + user.getUsername());
             }
         }
         userService.getUserList((data) -> {
             for (User user : data) {
-                System.err.println("异步调用4 =====> " + user.getUsername());
+//                System.err.println("异步调用4 =====> " + user.getUsername());
             }
         });
     }
@@ -84,7 +84,7 @@ public class MockRpc {
 
     public static void rpcServerProxyParamUser(UserService userService) {
         User user = userService.updateUser(new User(21, "小周", false, 35, new Date(), new Date(), new Date()));
-        System.err.println("同步调用10 =====> " + user);
+//        System.err.println("同步调用10 =====> " + user);
     }
 
 
@@ -100,26 +100,26 @@ public class MockRpc {
         List<User> userList = userService.updateUsers(list);
         if (userList != null) {
             for (User user : userList) {
-                System.err.println("同步调用11 =====> " + user.getId() + " --- " + user.getUsername());
+//                System.err.println("同步调用11 =====> " + user.getId() + " --- " + user.getUsername());
             }
         }
     }
 
     private static void rpcPathReturnDepartment() {
         Department department = RpcClient.get(MockRpcClient, "/department/get", Department.class, "技术部");
-        System.err.println("路径式同步调用5 =====> " + department);
+//        System.err.println("路径式同步调用5 =====> " + department);
 
         RpcClient.get(MockRpcClient, "/department/get", Department.class, (data) -> {
-            System.err.println("路径式异步调用6 =====> " + data);
+//            System.err.println("路径式异步调用6 =====> " + data);
         }, "技术部");
     }
 
     private static void rpcPathReturnDepartment2() {
         Department department = RpcClient.get(MockRpcClient2, "/department/get", Department.class, "技术部");
-        System.err.println("路径式同步调用5 =====> " + department);
+//        System.err.println("路径式同步调用5 =====> " + department);
 
         RpcClient.get(MockRpcClient2, "/department/get", Department.class, (data) -> {
-            System.err.println("路径式异步调用6 =====> " + data);
+//            System.err.println("路径式异步调用6 =====> " + data);
         }, "技术部");
     }
 
@@ -128,12 +128,12 @@ public class MockRpc {
         // 如果使用Hessian，这个方法序列化会失败，因为 /department/list 这个接口返回的是一个 ArrayList<Department> 对象，序列化为数组会失败，但是 Json 则可以成功
         Department[] departmentList = RpcClient.get(MockRpcClient, "/department/list", Department[].class);
         for (Department dept : departmentList) {
-            System.err.println("路径式同步调用7 =====> " + dept.getId() + "---" + dept.getName());
+//            System.err.println("路径式同步调用7 =====> " + dept.getId() + "---" + dept.getName());
         }
 
         RpcClient.get(MockRpcClient, "/department/list", Department[].class, (list) -> {
             for (Department department : list) {
-                System.err.println("路径式异步调用8 =====> " + department.getId() + "---" + department.getName());
+//                System.err.println("路径式异步调用8 =====> " + department.getId() + "---" + department.getName());
             }
         });
     }
@@ -143,7 +143,7 @@ public class MockRpc {
         RpcClient.get(MockRpcClient, "/department/list", new ValueType<List<Department>>() {
         }, (list) -> {
             for (Department department : list) {
-                System.err.println("路径式异步调用9 =====> " + department.getId() + "---" + department.getName());
+//                System.err.println("路径式异步调用9 =====> " + department.getId() + "---" + department.getName());
             }
         });
     }
@@ -152,7 +152,7 @@ public class MockRpc {
         RpcClient.get(MockRpcClient2, "/department/list", new ValueType<List<Department>>() {
         }, (list) -> {
             for (Department department : list) {
-                System.err.println("路径式异步调用9 =====> " + department.getId() + "---" + department.getName());
+//                System.err.println("路径式异步调用9 =====> " + department.getId() + "---" + department.getName());
             }
         });
     }

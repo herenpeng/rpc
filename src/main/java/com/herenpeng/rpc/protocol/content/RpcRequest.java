@@ -19,10 +19,6 @@ public class RpcRequest<T> extends RpcProtocol {
 
     private int cmd;
     /**
-     * 标识位，用来表示一些状态
-     */
-    protected byte status;
-    /**
      * 全部参数，如果最后一个参数为rpc回调，则置为null值
      */
     private Object[] params;
@@ -82,7 +78,6 @@ public class RpcRequest<T> extends RpcProtocol {
         // 编码
         super.encode(out);
         out.writeInt(this.cmd);
-        out.writeByte(this.status);
         if (this.params == null || this.params.length == 0) {
             out.writeInt(0);
         } else {
@@ -100,8 +95,7 @@ public class RpcRequest<T> extends RpcProtocol {
         // 解码
         super.decode(in);
         this.cmd = in.readInt();
-        this.status = in.readByte();
-        // 所有数据总长度
+        // 参数个数
         int paramsLength = in.readInt();
         if (paramsLength > 0) {
             this.paramsBytes = new byte[paramsLength][];

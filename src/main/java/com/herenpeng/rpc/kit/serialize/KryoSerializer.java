@@ -54,8 +54,8 @@ public class KryoSerializer implements Serializer {
             Kryo kryo = KRYOS.get();
             return (T) kryo.readClassAndObject(input);
         } catch (Exception e) {
-            log.error("[RPC工具]Kryo反序列化错误：{}，反序列化类型：{}，错误信息：{}", bytes, valueType, e.getMessage());
-            throw new RpcException("[RPC工具]Kryo反序列化错误：" + Arrays.toString(bytes) + "，反序列化类型：" + valueType);
+            log.error("[RPC工具]Kryo反序列化错误，反序列化类型：{}，错误信息：{}", valueType, e.getMessage());
+            throw new RpcException("[RPC工具]Kryo反序列化错误，反序列化类型：" + valueType);
         }
     }
 }

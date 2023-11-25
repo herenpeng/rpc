@@ -9,13 +9,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BitKit {
 
-    public static int setBit(int status, int bit) {
-        return status | (1 << bit);
+    public static int setBit(int value, int bit) {
+        return value | (1 << bit);
     }
 
 
-    public static int getBit(int status, int bit) {
-        return (status >> bit) & 1;
+    public static int getBit(int value, int bit) {
+        return (value >> bit) & 1;
     }
 
 

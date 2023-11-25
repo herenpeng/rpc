@@ -335,8 +335,8 @@ public class RpcServerProxy implements InvocationHandler {
         RpcRequest<T> request = rpcInfo.getRequest();
         if (clientConfig.isMonitorLogEnable()) {
             RpcMethodLocator locator = cache.getMethodLocator(request.getCmd());
-            log.info("[RPC客户端]{}：执行结果：cmd：{}，目标：{}，是否异步：{}，是否成功，{}，入参：{}，消耗时间：{}ms", name,
-                    request.getCmd(), locator.key(), request.isAsync() ? "异步" : "同步", rpcInfo.isSuccess() ? "成功" : "失败", request.getParams(),
+            log.info("[RPC客户端]{}：执行结果：cmd：{}，目标：{}，是否异步：{}，是否成功，{}，消耗时间：{}ms", name,
+                    request.getCmd(), locator.key(), request.isAsync() ? "异步" : "同步", rpcInfo.isSuccess() ? "成功" : "失败",
                     rpcInfo.getEndTime() - rpcInfo.getStartTime());
         }
     }

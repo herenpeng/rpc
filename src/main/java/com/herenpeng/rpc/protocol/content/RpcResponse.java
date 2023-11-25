@@ -1,5 +1,7 @@
 package com.herenpeng.rpc.protocol.content;
 
+import com.herenpeng.rpc.kit.BitKit;
+import com.herenpeng.rpc.kit.RpcKit;
 import io.netty.buffer.ByteBuf;
 import lombok.*;
 
@@ -28,9 +30,13 @@ public class RpcResponse extends RpcProtocol {
 
     @Override
     public void encode(ByteBuf out) {
-        super.encode(out);
         // 编码返回信息为字节
         this.returnBytes = getSerializer().serialize(this.returnData);
+        if (returnBytes.length > 1024 * 100) {
+            returnBytes = RpcKit.compress(this.returnBytes);
+            this.status = (byte) BitKit.setBit(this.status, STATUS_COMPRESS);
+        }
+        super.encode(out);
         if (this.returnBytes == null || this.returnBytes.length == 0) {
             out.writeInt(0);
         } else {
@@ -55,8 +61,12 @@ public class RpcResponse extends RpcProtocol {
             this.returnBytes = new byte[length];
             // 解码的时候只将其解析为字节，由后续根据类型反序列化
             in.readBytes(returnBytes);
+            if (BitKit.getBit(this.status, STATUS_COMPRESS) == 1) {
+                // 有压缩
+                returnBytes = RpcKit.decompress(returnBytes);
+            }
         }
-        // 所有数据总长度
+        // 异常数据总长度
         length = in.readInt();
         if (length > 0) {
             byte[] exceptionBytes = new byte[length];

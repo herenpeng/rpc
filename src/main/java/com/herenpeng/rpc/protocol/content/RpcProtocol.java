@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * +-------------+-------------+-------------+-------------+-------------+-------------+-------------+
  * |   version   |    type     |   subType   |                  sequence                             |
  * +-------------+-------------+-------------+-------------+-------------+-------------+-------------+
- * |  serialize  |                            data                                                   |
+ * |  serialize  |   status    |               data                                                  |
  * +-------------+-------------+-------------+-------------+-------------+-------------+-------------+
  * |                                                                                                 |
  * +-------------+-------------+-------------+-------------+-------------+-------------+-------------+
@@ -48,9 +48,14 @@ public class RpcProtocol implements Protocol {
      */
     public static final byte SUB_TYPE_MESSAGE = 1;
     /**
-     * 内部使用的一些消息，比如：监控功能
+     * 内部使用的一些消息，比如：rpc请求列表，监控功能
      */
     public static final byte SUB_TYPE_INTERNAL = 2;
+
+    /**
+     * 压缩标识位
+     */
+    protected static final int STATUS_COMPRESS = 0;
 
     public static final ProtocolProcessor processor = new RpcProtocolProcessor();
 
@@ -68,6 +73,10 @@ public class RpcProtocol implements Protocol {
      * 序列化方式
      */
     private byte serialize;
+    /**
+     * 标识位，用来表示一些状态
+     */
+    protected byte status;
     /**
      * 传输的消息数据
      */
@@ -96,6 +105,7 @@ public class RpcProtocol implements Protocol {
         out.writeByte(subType);
         out.writeInt(sequence);
         out.writeByte(serialize);
+        out.writeByte(status);
     }
 
     /**
@@ -106,6 +116,7 @@ public class RpcProtocol implements Protocol {
         subType = in.readByte();
         sequence = in.readInt();
         serialize = in.readByte();
+        status = in.readByte();
     }
 
     @Override

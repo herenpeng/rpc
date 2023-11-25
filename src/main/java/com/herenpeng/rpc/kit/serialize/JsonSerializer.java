@@ -46,8 +46,8 @@ public class JsonSerializer implements Serializer {
             JavaType javaType = typeFactory.constructType(valueType);
             return objectMapper.readValue(bytes, javaType);
         } catch (IOException e) {
-            log.error("[RPC工具]Json反序列化错误：{}，反序列化类型：{}，错误信息：{}", bytes, valueType, e.getMessage());
-            throw new RpcException("[RPC工具]Json反序列化错误：" + Arrays.toString(bytes) + "，反序列化类型：" + valueType);
+            log.error("[RPC工具]Json反序列化错误，反序列化类型：{}，错误信息：{}", valueType, e.getMessage());
+            throw new RpcException("[RPC工具]Json反序列化错误，反序列化类型：" + valueType);
         }
     }
 }
