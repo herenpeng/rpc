@@ -1,11 +1,14 @@
 package com.herenpeng.rpc.protocol.content;
 
 import com.herenpeng.rpc.exception.RpcException;
+import com.herenpeng.rpc.kit.BitKit;
+import com.herenpeng.rpc.kit.RpcKit;
 import com.herenpeng.rpc.kit.serialize.Serializer;
 import com.herenpeng.rpc.kit.serialize.SerializerManager;
 import com.herenpeng.rpc.protocol.Protocol;
 import com.herenpeng.rpc.protocol.ProtocolProcessor;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -32,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @ToString
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
-public class RpcProtocol implements Protocol {
+public abstract class RpcProtocol implements Protocol {
 
     private static final AtomicInteger protoSequence = new AtomicInteger();
 
@@ -101,12 +104,22 @@ public class RpcProtocol implements Protocol {
      */
     @Override
     public void encode(ByteBuf out) {
+        ByteBuf buffer = Unpooled.buffer();
+        encodeData(buffer);
+        byte[] data = RpcKit.getBytes(buffer);
+        if (data.length > 1024 * 100) {
+            data = RpcKit.compress(data);
+            this.status = (byte) BitKit.setBit(this.status, STATUS_COMPRESS);
+        }
         out.writeByte(type);
         out.writeByte(subType);
         out.writeInt(sequence);
         out.writeByte(serialize);
         out.writeByte(status);
+        out.writeBytes(data);
     }
+
+    protected abstract void encodeData(ByteBuf buffer);
 
     /**
      * 解码方法
@@ -117,7 +130,17 @@ public class RpcProtocol implements Protocol {
         sequence = in.readInt();
         serialize = in.readByte();
         status = in.readByte();
+        byte[] data = RpcKit.getBytes(in);
+        if (BitKit.getBit(this.status, STATUS_COMPRESS) == 1) {
+            // 有压缩，执行解压缩
+            data = RpcKit.decompress(data);
+        }
+        decodeData(Unpooled.wrappedBuffer(data));
     }
+
+
+    protected abstract void decodeData(ByteBuf in);
+
 
     @Override
     public ProtocolProcessor getProcessor() {

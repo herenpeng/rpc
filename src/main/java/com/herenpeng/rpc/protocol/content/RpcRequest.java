@@ -1,8 +1,11 @@
 package com.herenpeng.rpc.protocol.content;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.herenpeng.rpc.kit.BitKit;
 import com.herenpeng.rpc.kit.RpcCallback;
+import com.herenpeng.rpc.kit.RpcKit;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import lombok.*;
 
 import java.lang.reflect.Type;
@@ -74,9 +77,8 @@ public class RpcRequest<T> extends RpcProtocol {
 
 
     @Override
-    public void encode(ByteBuf out) {
+    public void encodeData(ByteBuf out) {
         // 编码
-        super.encode(out);
         out.writeInt(this.cmd);
         if (this.params == null || this.params.length == 0) {
             out.writeInt(0);
@@ -91,9 +93,8 @@ public class RpcRequest<T> extends RpcProtocol {
     }
 
     @Override
-    public void decode(ByteBuf in) {
+    public void decodeData(ByteBuf in) {
         // 解码
-        super.decode(in);
         this.cmd = in.readInt();
         // 参数个数
         int paramsLength = in.readInt();

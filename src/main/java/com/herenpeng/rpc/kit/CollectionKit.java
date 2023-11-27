@@ -16,7 +16,7 @@ public class CollectionKit {
     }
 
     public static <E> boolean isEmpty(Collection<E> collection) {
-        return collection == null || collection.size() == 0;
+        return collection == null || collection.isEmpty();
     }
 
 

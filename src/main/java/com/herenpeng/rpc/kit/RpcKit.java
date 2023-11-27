@@ -3,6 +3,7 @@ package com.herenpeng.rpc.kit;
 import com.herenpeng.rpc.annotation.RpcMethod;
 import com.herenpeng.rpc.common.RpcMethodLocator;
 import com.herenpeng.rpc.exception.RpcException;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
 
@@ -88,6 +89,13 @@ public class RpcKit {
     public static String getClientIp(ChannelHandlerContext ctx) {
         InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         return socketAddress.getHostName() + ":" + socketAddress.getPort();
+    }
+
+
+    public static byte[] getBytes(ByteBuf buffer) {
+        byte[] data = new byte[buffer.readableBytes()];
+        buffer.readBytes(data);
+        return data;
     }
 
 
