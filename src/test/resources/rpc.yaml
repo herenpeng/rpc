@@ -10,6 +10,7 @@ rpc:
       serialize: 1
       heartbeat-log-enable: false
       monitor-log-enable: true
+      compress-enable-size: 12040
     - name: MockRpcClient2
       host: 127.0.0.1
       port: 10000
@@ -20,6 +21,7 @@ rpc:
       serialize: 1
       heartbeat-log-enable: false
       monitor-log-enable: true
+      compress-enable-size: 12040
   servers:
     - name: MockRpcServer
       port: 10000
@@ -29,3 +31,4 @@ rpc:
       executor-thread-max-num: 5
       executor-thread-keep-alive-time: 10
       executor-thread-blocking-queue-size: 3
+      compress-enable-size: 12040

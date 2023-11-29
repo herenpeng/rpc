@@ -24,8 +24,9 @@ public class RpcResponse extends RpcProtocol {
 
     private String exception;
 
-    public RpcResponse(byte subType, int sequence, byte serialize) {
+    public RpcResponse(byte subType, int sequence, byte serialize, int compressEnableSize) {
         super(TYPE_RESPONSE, subType, sequence, serialize);
+        setCompressEnableSize(compressEnableSize);
     }
 
 

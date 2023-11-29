@@ -85,6 +85,8 @@ public abstract class RpcProtocol implements Protocol {
      */
     private byte[] data;
 
+    private transient int compressEnableSize;
+
     public RpcProtocol(byte type, byte subType, byte serialize) {
         this.type = type;
         this.subType = subType;
@@ -107,7 +109,7 @@ public abstract class RpcProtocol implements Protocol {
         ByteBuf buffer = Unpooled.buffer();
         encodeData(buffer);
         byte[] data = RpcKit.getBytes(buffer);
-        if (data.length > 1024 * 100) {
+        if (data.length >= compressEnableSize) {
             data = RpcKit.compress(data);
             this.status = (byte) BitKit.setBit(this.status, STATUS_COMPRESS);
         }

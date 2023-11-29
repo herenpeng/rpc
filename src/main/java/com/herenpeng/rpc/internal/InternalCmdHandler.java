@@ -1,6 +1,7 @@
 package com.herenpeng.rpc.internal;
 
 import com.herenpeng.rpc.client.RpcServerProxy;
+import com.herenpeng.rpc.config.RpcServerConfig;
 import com.herenpeng.rpc.kit.ClassScanner;
 import com.herenpeng.rpc.protocol.content.RpcRequest;
 import com.herenpeng.rpc.protocol.content.RpcResponse;
@@ -32,8 +33,10 @@ public abstract class InternalCmdHandler {
 
 
     public static RpcResponse invoke(RpcServer rpcServer, RpcRequest<?> request) {
+        RpcServerConfig serverConfig = rpcServer.getServerConfig();
         InternalCmdHandler internalCmd = internalCmdMap.get(request.getCmd());
-        RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence(), request.getSerialize());
+        RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence(), request.getSerialize(),
+                serverConfig.getCompressEnableSize());
         Object object = internalCmd.invoke(rpcServer);
         response.setReturnData(object);
         return response;

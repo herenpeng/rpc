@@ -55,4 +55,10 @@ public class RpcServerConfig implements Serializable {
     @JsonProperty("executor-thread-blocking-queue-size")
     private int executorThreadBlockingQueueSize = 1;
 
+    /**
+     * 数据压缩启动要求数据大小，单位：字节长度
+     */
+    @JsonProperty("compress-enable-size")
+    private int compressEnableSize = 1024 * 10;
+
 }

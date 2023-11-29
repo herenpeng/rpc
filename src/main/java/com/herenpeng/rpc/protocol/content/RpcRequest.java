@@ -43,8 +43,9 @@ public class RpcRequest<T> extends RpcProtocol {
     private RpcCallback<T> callable;
 
 
-    public RpcRequest(byte subType, byte serialize) {
+    public RpcRequest(byte subType, byte serialize, int compressEnableSize) {
         super(RpcProtocol.TYPE_REQUEST, subType, serialize);
+        setCompressEnableSize(compressEnableSize);
     }
 
     /**
@@ -57,22 +58,24 @@ public class RpcRequest<T> extends RpcProtocol {
      * @param callable   回调函数，同步为null
      */
     public RpcRequest(int cmd, Object[] params, Type returnType, boolean async,
-                      RpcCallback<T> callable, byte serialize) {
+                      RpcCallback<T> callable, byte serialize, int compressEnableSize) {
         super(RpcProtocol.TYPE_REQUEST, RpcProtocol.SUB_TYPE_MESSAGE, serialize);
         this.cmd = cmd;
         this.params = params;
         this.returnType = returnType;
         this.async = async;
         this.callable = callable;
+        setCompressEnableSize(compressEnableSize);
     }
 
-    public RpcRequest(int cmd, Object[] params, Type returnType, RpcCallback<T> callable, byte serialize) {
+    public RpcRequest(int cmd, Object[] params, Type returnType, RpcCallback<T> callable, byte serialize, int compressEnableSize) {
         super(RpcProtocol.TYPE_REQUEST, RpcProtocol.SUB_TYPE_MESSAGE, serialize);
         this.cmd = cmd;
         this.params = params;
         this.returnType = returnType;
         this.async = callable != null;
         this.callable = callable;
+        setCompressEnableSize(compressEnableSize);
     }
 
 

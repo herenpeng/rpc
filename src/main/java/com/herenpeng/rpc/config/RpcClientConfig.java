@@ -73,4 +73,10 @@ public class RpcClientConfig implements Serializable {
     @JsonProperty("monitor-log-enable")
     private boolean monitorLogEnable = false;
 
+    /**
+     * 数据压缩启动要求数据大小，单位：字节长度
+     */
+    @JsonProperty("compress-enable-size")
+    private int compressEnableSize = 1024 * 10;
+
 }

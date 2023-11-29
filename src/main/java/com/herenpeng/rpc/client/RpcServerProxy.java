@@ -178,13 +178,14 @@ public class RpcServerProxy implements InvocationHandler {
         int cmd = cache.getCmd(method);
         RpcCallback<?> callback = RpcKit.getRpcCallback(args);
         RpcRequest<?> request = new RpcRequest<>(cmd, args, method.getGenericReturnType(),
-                callback, clientConfig.getSerialize());
+                callback, clientConfig.getSerialize(), clientConfig.getCompressEnableSize());
         return invoke(request);
     }
 
     public <T> T invokeMethod(String path, Object[] args, Type returnType, boolean async, RpcCallback<T> callback) {
         int cmd = cache.getCmd(path);
-        RpcRequest<T> request = new RpcRequest<>(cmd, args, returnType, async, callback, clientConfig.getSerialize());
+        RpcRequest<T> request = new RpcRequest<>(cmd, args, returnType, async, callback,
+                clientConfig.getSerialize(), clientConfig.getCompressEnableSize());
         return invoke(request);
     }
 
@@ -282,7 +283,8 @@ public class RpcServerProxy implements InvocationHandler {
     private <T> void initHeartbeat() {
         RpcScheduler.doLoopTask(() -> {
             checkHeartbeat();
-            RpcRequest<T> request = new RpcRequest<>(RpcProtocol.SUB_TYPE_EMPTY, clientConfig.getSerialize());
+            RpcRequest<T> request = new RpcRequest<>(RpcProtocol.SUB_TYPE_EMPTY, clientConfig.getSerialize(),
+                    clientConfig.getCompressEnableSize());
             clientHeartbeatQueue.offer(request.getSequence());
             // 构造一个消息
             this.session.writeAndFlush(request);
@@ -354,7 +356,8 @@ public class RpcServerProxy implements InvocationHandler {
     }
 
     private void invokeInternal(int cmd) {
-        RpcRequest<?> request = new RpcRequest<>(RpcProtocol.SUB_TYPE_INTERNAL, clientConfig.getSerialize());
+        RpcRequest<?> request = new RpcRequest<>(RpcProtocol.SUB_TYPE_INTERNAL, clientConfig.getSerialize(),
+                clientConfig.getCompressEnableSize());
         request.setCmd(cmd);
         sequenceInternalCmdMap.put(request.getSequence(), request.getCmd());
         this.session.writeAndFlush(request);
