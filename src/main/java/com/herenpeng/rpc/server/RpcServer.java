@@ -1,7 +1,7 @@
 package com.herenpeng.rpc.server;
 
 import com.herenpeng.rpc.common.RpcMethodInvoke;
-import com.herenpeng.rpc.common.RpcServerMonitorData;
+import com.herenpeng.rpc.common.RpcServerMonitor;
 import com.herenpeng.rpc.config.RpcConfig;
 import com.herenpeng.rpc.config.RpcServerConfig;
 import com.herenpeng.rpc.internal.InternalCmdHandler;
@@ -48,13 +48,13 @@ public class RpcServer {
     /**
      * rpc性能数据监控对象
      */
-    private final RpcServerMonitorData monitorData;
+    private final RpcServerMonitor serverMonitor;
     private ExecutorService service;
 
 
     public RpcServer() {
         this.instance = this;
-        monitorData = new RpcServerMonitorData();
+        serverMonitor = new RpcServerMonitor();
     }
 
     /**
@@ -73,7 +73,7 @@ public class RpcServer {
         initRpcServer(serverConfig.getPort());
         long end = DateKit.now();
         log.info("[RPC服务端]{}：初始化完成，端口：{}，共耗时{}毫秒", name, serverConfig.getPort(), end - start);
-        monitorData.setStartUpTime(end);
+        serverMonitor.setStartUpTime(end);
     }
 
     private void initRpcCache(List<Class<?>> classList) {
@@ -135,7 +135,7 @@ public class RpcServer {
     public void invoke(RpcRequest<?> request, ChannelHandlerContext ctx) {
         int cmd = request.getCmd();
         String clientIp = RpcKit.getClientIp(ctx);
-        monitorData.addRequest(clientIp, cmd);
+        serverMonitor.addRequest(clientIp, cmd);
         if (request == null) {
             throw new IllegalArgumentException("[RPC服务端]" + name + "：request不允许为null");
         }
@@ -148,9 +148,11 @@ public class RpcServer {
                 Method method = methodInvoke.getMethod();
                 Object[] params = request.getParams(method.getGenericParameterTypes());
                 // 执行方法
+                long startTime = System.currentTimeMillis();
                 Object returnData = method.invoke(rpcServer, params);
+                long useTime = System.currentTimeMillis() - startTime;
                 response.setReturnData(returnData);
-                monitorData.addSuccess(clientIp, cmd);
+                serverMonitor.addSuccess(clientIp, cmd, useTime);
             } catch (Exception e) {
                 log.error("[RPC服务端]{}：服务端执行方法发生异常：{}", name, request);
                 Throwable exception = e;
@@ -161,7 +163,7 @@ public class RpcServer {
                     response.setException(exception.getMessage());
                     exception.printStackTrace();
                 }
-                monitorData.addFail(clientIp, cmd);
+                serverMonitor.addFail(clientIp, cmd);
             }
             ctx.writeAndFlush(response);
             log.info("[RPC服务端]{}：响应RPC请求消息，cmd：{}，消息序列号：{}", name, cmd, request.getSequence());

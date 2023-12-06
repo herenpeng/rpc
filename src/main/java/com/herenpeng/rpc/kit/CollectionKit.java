@@ -3,6 +3,7 @@ package com.herenpeng.rpc.kit;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
+import java.util.function.ToLongFunction;
 
 /**
  * @author herenpeng
@@ -22,6 +23,11 @@ public class CollectionKit {
 
     public static <E> boolean isNotEmpty(Collection<E> collection) {
         return !isEmpty(collection);
+    }
+
+
+    public static <T> long sum(Collection<T> collection, ToLongFunction<? super T> mapper) {
+        return isEmpty(collection) ? 0 : collection.stream().mapToLong(mapper).sum();
     }
 
 }
