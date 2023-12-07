@@ -133,13 +133,15 @@ public class RpcServer {
 
 
     public void invoke(RpcRequest<?> request, ChannelHandlerContext ctx) {
-        int cmd = request.getCmd();
-        String clientIp = RpcKit.getClientIp(ctx);
-        serverMonitor.addRequest(clientIp, cmd);
         if (request == null) {
             throw new IllegalArgumentException("[RPC服务端]" + name + "：request不允许为null");
         }
+        int cmd = request.getCmd();
+        String clientIp = RpcKit.getClientIp(ctx);
+        serverMonitor.addRequest(clientIp, cmd);
         service.execute(() -> {
+            long useTime = 0;
+            boolean success = false;
             RpcResponse response = new RpcResponse(request.getSubType(), request.getSequence(),
                     request.getSerialize(), serverConfig.getCompressEnableSize());
             try {
@@ -150,9 +152,9 @@ public class RpcServer {
                 // 执行方法
                 long startTime = System.currentTimeMillis();
                 Object returnData = method.invoke(rpcServer, params);
-                long useTime = System.currentTimeMillis() - startTime;
+                useTime = System.currentTimeMillis() - startTime;
+                success = true;
                 response.setReturnData(returnData);
-                serverMonitor.addSuccess(clientIp, cmd, useTime);
             } catch (Exception e) {
                 log.error("[RPC服务端]{}：服务端执行方法发生异常：{}", name, request);
                 Throwable exception = e;
@@ -163,10 +165,14 @@ public class RpcServer {
                     response.setException(exception.getMessage());
                     exception.printStackTrace();
                 }
-                serverMonitor.addFail(clientIp, cmd);
             }
             ctx.writeAndFlush(response);
             log.info("[RPC服务端]{}：响应RPC请求消息，cmd：{}，消息序列号：{}", name, cmd, request.getSequence());
+            if (success) {
+                serverMonitor.addSuccess(clientIp, cmd, useTime);
+            } else {
+                serverMonitor.addFail(clientIp, cmd);
+            }
         });
     }
 

@@ -103,4 +103,9 @@ public class KitTest {
         return true;
     }
 
+
+    @Test
+    public void test03() {
+    }
+
 }

@@ -7,6 +7,7 @@ import com.herenpeng.rpc.protocol.content.RpcResponse;
 import com.herenpeng.rpc.server.RpcServer;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Deque;
 import java.util.Map;
 
 @Slf4j
@@ -31,10 +32,15 @@ public class MonitorInternalCmd extends InternalCmdHandler {
         log.info("服务器已运行时间：" + DateKit.getTimeText(runTime));
         for (Map.Entry<String, RpcServerMonitor.ServerMonitorInfo> entry : serverMonitor.getServerMonitorMap().entrySet()) {
             log.info("客户端：{}", entry.getKey());
-            RpcServerMonitor.ServerMonitorInfo ServerMonitorInfo = entry.getValue();
-            log.info("      请求数：{}", ServerMonitorInfo.requestNum());
-            log.info("      请求成功数：{}", ServerMonitorInfo.successNum());
-            log.info("      请求失败数：{}", ServerMonitorInfo.failNum());
+            RpcServerMonitor.ServerMonitorInfo serverMonitorInfo = entry.getValue();
+            log.info("      请求数：{}", serverMonitorInfo.requestNum());
+            log.info("      请求成功数：{}", serverMonitorInfo.successNum());
+            log.info("      请求失败数：{}", serverMonitorInfo.failNum());
+            log.info("      总耗时：{}", serverMonitorInfo.useTime());
+            Deque<RpcServerMonitor.MinuteMonitorInfo> minuteMonitor = serverMonitorInfo.getMinuteMonitor();
+            for (RpcServerMonitor.MinuteMonitorInfo monitorInfo : minuteMonitor) {
+                log.info("      {}：请求数：{}，总耗时：{}ms", DateKit.minuteFormat(monitorInfo.getMinute()), monitorInfo.getNum(), monitorInfo.getUseTime());
+            }
         }
     }
 

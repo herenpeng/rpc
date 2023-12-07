@@ -10,6 +10,7 @@ import com.herenpeng.rpc.service.UserService;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 /**
  * @author herenpeng
@@ -28,32 +29,52 @@ public class MockRpc {
         UserService userService = RpcClient.createRpc(MockRpcClient, UserService.class);
         UserService userService2 = RpcClient.createRpc(MockRpcClient2, UserService.class);
 
+        Random random = new Random();
+        while (true) {
+            long time = random.nextLong(5000);
+            Thread.sleep(time);
+            int num = random.nextInt(12);
+            switch (num) {
+                case 0 -> rpcServerProxyReturnUser(userService);
+                case 1 -> rpcServerProxyReturnUser(userService2);
+                case 2 -> rpcServerProxyReturnUserList(userService);
+                case 3 -> rpcServerProxyReturnUserList(userService2);
+                case 4 -> rpcPathReturnDepartment();
+                case 5 -> rpcPathReturnDepartment2();
+                case 6 -> rpcPathReturnDepartmentList();
+                case 7 -> rpcPathReturnDepartmentList2();
+                case 8 -> rpcServerProxyParamUser(userService);
+                case 9 -> rpcServerProxyParamUser(userService2);
+                case 10 -> rpcServerProxyParamUserList(userService);
+                case 11 -> rpcServerProxyParamUserList(userService2);
+            }
+        }
         // 服务代理调用，返回 User 对象
-        rpcServerProxyReturnUser(userService);
-        rpcServerProxyReturnUser(userService2);
-
-        // 服务代理调用，返回 List<User> 对象
-        rpcServerProxyReturnUserList(userService);
-        rpcServerProxyReturnUserList(userService2);
-
-        // 路径调用，返回 Department 对象
-        rpcPathReturnDepartment();
-        rpcPathReturnDepartment2();
-
-        // 路径调用，返回 Department[] 数组对象
-        // rpcPathReturnDepartmentArray();
-
-        // 路径调用，返回 List<Department> 集合对象
-        rpcPathReturnDepartmentList();
-        rpcPathReturnDepartmentList2();
-
-        // 服务代理调用，传递参数是 User 对象
-        rpcServerProxyParamUser(userService);
-        rpcServerProxyParamUser(userService2);
-
-        // 服务代理调用，传递参数是 List<User> 对象
-        rpcServerProxyParamUserList(userService);
-        rpcServerProxyParamUserList(userService2);
+//        rpcServerProxyReturnUser(userService);
+//        rpcServerProxyReturnUser(userService2);
+//
+//        // 服务代理调用，返回 List<User> 对象
+//        rpcServerProxyReturnUserList(userService);
+//        rpcServerProxyReturnUserList(userService2);
+//
+//        // 路径调用，返回 Department 对象
+//        rpcPathReturnDepartment();
+//        rpcPathReturnDepartment2();
+//
+//        // 路径调用，返回 Department[] 数组对象
+//        // rpcPathReturnDepartmentArray();
+//
+//        // 路径调用，返回 List<Department> 集合对象
+//        rpcPathReturnDepartmentList();
+//        rpcPathReturnDepartmentList2();
+//
+//        // 服务代理调用，传递参数是 User 对象
+//        rpcServerProxyParamUser(userService);
+//        rpcServerProxyParamUser(userService2);
+//
+//        // 服务代理调用，传递参数是 List<User> 对象
+//        rpcServerProxyParamUserList(userService);
+//        rpcServerProxyParamUserList(userService2);
     }
 
 
