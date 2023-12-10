@@ -1,6 +1,7 @@
 package com.herenpeng.rpc.common;
 
-import com.herenpeng.rpc.kit.CollectionKit;
+import com.herenpeng.rpc.kit.ContainerKit;
+import com.herenpeng.rpc.kit.ContainerKit;
 import com.herenpeng.rpc.kit.DateKit;
 import lombok.*;
 
@@ -50,19 +51,19 @@ public class RpcServerMonitor implements Serializable {
 
 
         public long requestNum() {
-            return CollectionKit.sum(methodMonitor.values(), MethodMonitorInfo::getRequest);
+            return ContainerKit.sum(methodMonitor.values(), MethodMonitorInfo::getRequest);
         }
 
         public long successNum() {
-            return CollectionKit.sum(methodMonitor.values(), MethodMonitorInfo::getSuccess);
+            return ContainerKit.sum(methodMonitor.values(), MethodMonitorInfo::getSuccess);
         }
 
         public long failNum() {
-            return CollectionKit.sum(methodMonitor.values(), MethodMonitorInfo::getFail);
+            return ContainerKit.sum(methodMonitor.values(), MethodMonitorInfo::getFail);
         }
 
         public long useTime() {
-            return CollectionKit.sum(methodMonitor.values(), MethodMonitorInfo::getUseTime);
+            return ContainerKit.sum(methodMonitor.values(), MethodMonitorInfo::getUseTime);
         }
 
 

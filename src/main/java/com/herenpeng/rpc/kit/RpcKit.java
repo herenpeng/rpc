@@ -61,7 +61,7 @@ public class RpcKit {
 
 
     public static RpcCallback<?> getRpcCallback(Object[] args) {
-        if (CollectionKit.isEmpty(args)) {
+        if (ContainerKit.isEmpty(args)) {
             return null;
         }
         // 异步

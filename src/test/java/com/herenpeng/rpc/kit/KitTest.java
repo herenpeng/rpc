@@ -106,6 +106,7 @@ public class KitTest {
 
     @Test
     public void test03() {
+        List<User> list = new ArrayList<>();
     }
 
 }

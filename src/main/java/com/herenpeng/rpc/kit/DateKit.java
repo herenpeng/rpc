@@ -15,10 +15,8 @@ public class DateKit {
     public static final long ONE_DAY = 24 * ONE_HOUR;
 
     private static final String TIME_FORMAT_TEMPLATE = "yyyy-MM-dd HH:mm:ss";
-    private static final String TIME_FORMAT_TEMPLATE2 = "yyyy年MM月dd日 HH时mm分ss秒";
     private static final String MINUTE_FORMAT_TEMPLATE = "yyyy-MM-dd HH:mm";
     private static final SimpleDateFormat sdf = new SimpleDateFormat(TIME_FORMAT_TEMPLATE);
-    private static final SimpleDateFormat sdf2 = new SimpleDateFormat(TIME_FORMAT_TEMPLATE2);
     private static final SimpleDateFormat minuteSdf = new SimpleDateFormat(MINUTE_FORMAT_TEMPLATE);
 
 
