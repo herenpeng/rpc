@@ -58,10 +58,10 @@ public class MonitorInternalCmd extends InternalCmdHandler {
             out.println();
         }
         RpcServerMonitor.MinuteMonitorInfo first = minuteMonitor.peekFirst();
-        RpcServerMonitor.MinuteMonitorInfo last = minuteMonitor.peekLast();
         out.print(DateKit.minuteFormat(first.getMinute()));
         if (minuteMonitor.size() > 1) {
             print(' ', Math.max(minuteMonitor.size() - 32, 1));
+            RpcServerMonitor.MinuteMonitorInfo last = minuteMonitor.peekLast();
             out.println(DateKit.minuteFormat(last.getMinute()));
         }
     }
@@ -72,11 +72,5 @@ public class MonitorInternalCmd extends InternalCmdHandler {
             out.print(c);
         }
     }
-
-    private void println(Character c, int num) {
-        print(c, num);
-        out.println();
-    }
-
 
 }

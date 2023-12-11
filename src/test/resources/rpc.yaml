@@ -32,3 +32,5 @@ rpc:
       executor-thread-keep-alive-time: 10
       executor-thread-blocking-queue-size: 3
       compress-enable-size: 12040
+      monitor-minute-limit: 60
+

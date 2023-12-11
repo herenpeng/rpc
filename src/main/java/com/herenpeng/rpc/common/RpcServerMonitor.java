@@ -18,6 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @AllArgsConstructor
 public class RpcServerMonitor implements Serializable {
 
+    private int monitorMinuteLimit;
+
     /**
      * 服务启动时间（毫秒）
      */
@@ -27,22 +29,27 @@ public class RpcServerMonitor implements Serializable {
 
 
     public void addRequest(String clientIp, int cmd) {
-        ServerMonitorInfo serverMonitorInfo = serverMonitorMap.computeIfAbsent(clientIp, key -> new ServerMonitorInfo());
+        ServerMonitorInfo serverMonitorInfo = serverMonitorMap.computeIfAbsent(clientIp, key -> new ServerMonitorInfo(monitorMinuteLimit));
         serverMonitorInfo.addRequest(cmd);
     }
 
     public void addSuccess(String clientIp, int cmd, long useTime) {
-        ServerMonitorInfo serverMonitorInfo = serverMonitorMap.computeIfAbsent(clientIp, key -> new ServerMonitorInfo());
+        ServerMonitorInfo serverMonitorInfo = serverMonitorMap.computeIfAbsent(clientIp, key -> new ServerMonitorInfo(monitorMinuteLimit));
         serverMonitorInfo.addSuccess(cmd, useTime);
     }
 
     public void addFail(String clientIp, int cmd) {
-        ServerMonitorInfo serverMonitorInfo = serverMonitorMap.computeIfAbsent(clientIp, key -> new ServerMonitorInfo());
+        ServerMonitorInfo serverMonitorInfo = serverMonitorMap.computeIfAbsent(clientIp, key -> new ServerMonitorInfo(monitorMinuteLimit));
         serverMonitorInfo.addFail(cmd);
     }
 
     @Data
     public static class ServerMonitorInfo {
+
+        private final int monitorMinuteLimit;
+        public ServerMonitorInfo(int monitorMinuteLimit) {
+            this.monitorMinuteLimit = monitorMinuteLimit;
+        }
 
         private Map<Integer, MethodMonitorInfo> methodMonitor = new ConcurrentHashMap<>();
         private long useTimeStart = 0;
@@ -86,7 +93,7 @@ public class RpcServerMonitor implements Serializable {
                 }
                 if ((minuteStart - useTimeStart) / DateKit.ONE_MINUTE >= minuteMonitor.size()) {
                     minuteMonitor.add(new MinuteMonitorInfo(minuteStart, 1, useTime));
-                    if (minuteMonitor.size() > 60) {
+                    if (minuteMonitor.size() > monitorMinuteLimit) {
                         // 只统计最近一个小时的数据
                         minuteMonitor.pollFirst();
                     }

@@ -61,4 +61,7 @@ public class RpcServerConfig implements Serializable {
     @JsonProperty("compress-enable-size")
     private int compressEnableSize = 1024 * 10;
 
+    @JsonProperty("monitor-minute-limit")
+    private int monitorMinuteLimit;
+
 }

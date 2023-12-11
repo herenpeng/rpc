@@ -65,6 +65,7 @@ public class RpcServer {
     public void start(Class<?> rpcApplicationClass, RpcServerConfig serverConfig, List<Class<?>> classList) {
         long start = DateKit.now();
         this.serverConfig = serverConfig;
+        serverMonitor.setMonitorMinuteLimit(serverConfig.getMonitorMinuteLimit());
         this.name = serverConfig.getName();
         log.info("[RPC服务端]{}：正在初始化", name);
         // 初始化rpc缓存
